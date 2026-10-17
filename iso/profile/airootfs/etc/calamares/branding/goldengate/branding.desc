@@ -16,8 +16,8 @@ strings:
     versionedName:       "GoldenGate OS 27.0"
     shortVersionedName:  "GoldenGate 27"
     bootloaderEntryName: "GoldenGate OS"
-    productUrl:          "https://github.com/marcus-hendricks/GoldenGate"
-    supportUrl:          "https://github.com/marcus-hendricks/GoldenGate"
+    productUrl:          "https://github.com/marco85/GoldenGate"
+    supportUrl:          "https://github.com/marco85/GoldenGate"
 
 images:
     productLogo:         "logo.svg"

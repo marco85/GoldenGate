@@ -3,7 +3,7 @@
 
 iso_name="goldengate"
 iso_label="GOLDENGATE_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"
-iso_publisher="GoldenGate OS <https://github.com/marcus-hendricks/GoldenGate>"
+iso_publisher="GoldenGate OS <https://github.com/marco85/GoldenGate>"
 iso_application="GoldenGate OS (macOS 27 Golden Gate Clone for Surface Laptop 5)"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
 install_dir="arch"
