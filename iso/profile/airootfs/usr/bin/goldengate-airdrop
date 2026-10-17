@@ -1,0 +1,431 @@
+#!/usr/bin/env python3
+"""
+GoldenGate OS — Thorough 3-Engine AirDrop Suite (macOS 27 Golden Gate)
+Engines:
+  1. LocalSend Instant LAN Discovery (iPhone & Mac LocalSend app)
+  2. Zero-App Safari AirDrop Web/QR Bridge (send & receive files from iPhone Safari with zero app install)
+  3. KDE Connect Continuity Bridge (Universal Clipboard + direct device file push)
+"""
+from __future__ import annotations
+import argparse
+import cgi
+import html
+import http.server
+import io
+import json
+import os
+import shutil
+import socket
+import subprocess
+import sys
+import threading
+import urllib.parse
+from pathlib import Path
+
+STATE_FILE = Path.home() / ".config" / "goldengate" / "airdrop.json"
+DOWNLOADS_DIR = Path.home() / "Downloads"
+DEFAULT_STATE = {
+    "mode": "everyone",       # "everyone" | "contacts" | "off"
+    "device_name": "Surface Laptop 5 (Golden Gate)",
+    "port": 8765,
+    "shared_files": [],
+}
+
+
+def load_airdrop_state() -> dict:
+    state = dict(DEFAULT_STATE)
+    if STATE_FILE.exists():
+        try:
+            data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                state.update(data)
+        except Exception:
+            pass
+    if state["mode"] not in ("everyone", "contacts", "off"):
+        state["mode"] = "everyone"
+    return state
+
+
+def save_airdrop_state(state: dict) -> dict:
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    return state
+
+
+def get_lan_ip() -> str:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+    except Exception:
+        return "127.0.0.1"
+
+
+def notify_airdrop_received(filename: str, saved_path: Path) -> None:
+    if shutil.which("notify-send"):
+        subprocess.run(
+            [
+                "notify-send",
+                "-a",
+                "AirDrop",
+                "-i",
+                "preferences-system-network-share",
+                "AirDrop File Received",
+                f"Saved '{filename}' to Downloads",
+            ],
+            check=False,
+        )
+    sound_file = Path("/usr/share/sounds/goldengate/airdrop.wav")
+    if sound_file.exists() and shutil.which("pw-play"):
+        subprocess.Popen(["pw-play", str(sound_file)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def discover_kdeconnect_devices() -> list[dict]:
+    devices = []
+    if not shutil.which("kdeconnect-cli"):
+        return devices
+    try:
+        res = subprocess.run(
+            ["kdeconnect-cli", "--list-available", "--id-name-only"],
+            capture_output=True,
+            text=True,
+            timeout=2.0,
+            check=False,
+        )
+        for line in res.stdout.splitlines():
+            parts = line.strip().split(" ", 1)
+            if len(parts) == 2:
+                devices.append({"id": parts[0], "name": parts[1], "engine": "KDE Connect"})
+    except Exception:
+        pass
+    return devices
+
+
+def send_via_kdeconnect(device_id: str, files: list[str]) -> bool:
+    if not shutil.which("kdeconnect-cli"):
+        return False
+    ok = True
+    for f in files:
+        res = subprocess.run(["kdeconnect-cli", "-d", device_id, "--share", f], check=False)
+        if res.returncode != 0:
+            ok = False
+    return ok
+
+
+class SafariAirDropHandler(http.server.BaseHTTPRequestHandler):
+    """Zero-App Safari AirDrop HTTP handler for iPhone send & receive over local Wi-Fi."""
+
+    def log_message(self, format: str, *args) -> None:
+        pass
+
+    def do_GET(self) -> None:
+        state = load_airdrop_state()
+        if state["mode"] == "off":
+            self.send_Error(403, "AirDrop Receiving is Off")
+            return
+
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path.startswith("/download/"):
+            idx_str = parsed.path.split("/download/", 1)[1]
+            shared = state.get("shared_files", [])
+            try:
+                idx = int(idx_str)
+                fpath = Path(shared[idx])
+                if fpath.is_file():
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/octet-stream")
+                    self.send_header(
+                        "Content-Disposition",
+                        f'attachment; filename="{fpath.name}"',
+                    )
+                    self.send_header("Content-Length", str(fpath.stat().st_size))
+                    self.end_headers()
+                    with fpath.open("rb") as fp:
+                        shutil.copyfileobj(fp, self.wfile)
+                    return
+            except Exception:
+                pass
+            self.send_error(404, "File not found")
+            return
+
+        shared_links = []
+        for i, path_str in enumerate(state.get("shared_files", [])):
+            p = Path(path_str)
+            if p.is_file():
+                shared_links.append(
+                    f'<li><a class="file-btn" href="/download/{i}">⬇ Download {html.escape(p.name)}</a></li>'
+                )
+        shared_section = (
+            f"<h3>Ready from Surface Laptop 5:</h3><ul>{''.join(shared_links)}</ul>"
+            if shared_links
+            else "<p class='sub'>No outgoing files queued right now.</p>"
+        )
+
+        page = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirDrop — {html.escape(state['device_name'])}</title>
+<style>
+  body {{
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    background: #12141C; color: #F5F7FA; margin: 0; padding: 24px; text-align: center;
+  }}
+  .card {{
+    max-width: 420px; margin: 0 auto; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 16px; padding: 24px;
+    backdrop-filter: blur(20px);
+  }}
+  h1 {{ font-size: 22px; margin-top: 0; }}
+  .sub {{ color: #9AA5B8; font-size: 14px; }}
+  input[type=file] {{ margin: 16px 0; color: #fff; }}
+  button, .file-btn {{
+    display: inline-block; background: #0A84FF; color: #fff; border: none;
+    border-radius: 10px; padding: 12px 20px; font-size: 16px; font-weight: 600;
+    text-decoration: none; cursor: pointer; margin-top: 8px;
+  }}
+  ul {{ list-style: none; padding: 0; }}
+  li {{ margin: 10px 0; }}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>📡 AirDrop</h1>
+    <p class="sub">Connected to <b>{html.escape(state['device_name'])}</b></p>
+    <form method="POST" enctype="multipart/form-data" action="/upload">
+      <input type="file" name="file" multiple required><br>
+      <button type="submit">Send to Surface Laptop 5</button>
+    </form>
+    <hr style="border-color: rgba(255,255,255,0.12); margin: 22px 0;">
+    {shared_section}
+  </div>
+</body>
+</html>"""
+        body = page.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self) -> None:
+        if self.path != "/upload":
+            self.send_error(404)
+            return
+        form = cgi.FieldStorage(
+            fp=self.rfile,
+            headers=self.headers,
+            environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")},
+        )
+        DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
+        saved_names = []
+        fields = form["file"] if "file" in form else []
+        if not isinstance(fields, list):
+            fields = [fields]
+        for item in fields:
+            if getattr(item, "filename", None):
+                safe_name = os.path.basename(item.filename)
+                dest = DOWNLOADS_DIR / safe_name
+                with dest.open("wb") as out_f:
+                    shutil.copyfileobj(item.file, out_f)
+                saved_names.append(safe_name)
+                notify_airdrop_received(safe_name, dest)
+
+        msg = f"Sent {', '.join(saved_names)} to Surface Laptop 5!" if saved_names else "No file selected."
+        resp = f"<html><body style='background:#12141C;color:#fff;font-family:-apple-system,sans-serif;text-align:center;padding:40px;'><h2>✅ {html.escape(msg)}</h2><a href='/' style='color:#0A84FF;'>Back to AirDrop</a></body></html>".encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(resp)))
+        self.end_headers()
+        self.wfile.write(resp)
+
+
+def start_http_server_in_thread(port: int) -> http.server.ThreadingHTTPServer | None:
+    try:
+        srv = http.server.ThreadingHTTPServer(("0.0.0.0", port), SafariAirDropHandler)
+        t = threading.Thread(target=srv.serve_forever, daemon=True)
+        t.start()
+        return srv
+    except OSError:
+        return None
+
+
+def run_gui(files_to_send: list[str]) -> int:
+    try:
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QComboBox,
+            QFileDialog,
+            QHBoxLayout,
+            QLabel,
+            QListWidget,
+            QPushButton,
+            QVBoxLayout,
+            QWidget,
+        )
+    except ImportError:
+        print("PyQt6 not installed; use --status or --mode.")
+        return 0
+
+    state = load_airdrop_state()
+    if files_to_send:
+        state["shared_files"] = [str(Path(f).resolve()) for f in files_to_send if Path(f).exists()]
+        save_airdrop_state(state)
+
+    port = int(state.get("port", 8765))
+    start_http_server_in_thread(port)
+    lan_url = f"http://{get_lan_ip()}:{port}"
+
+    app = QApplication(sys.argv)
+    win = QWidget()
+    win.setWindowTitle("AirDrop — Golden Gate")
+    win.setFixedSize(560, 440)
+    win.setStyleSheet("""
+        QWidget {
+            background-color: rgba(24, 27, 36, 236);
+            color: #F4F6FA;
+            font-family: 'Inter', sans-serif;
+            border-radius: 10px;
+        }
+        QPushButton {
+            background-color: #0A84FF;
+            color: white;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-weight: 600;
+        }
+        QPushButton#secondary {
+            background-color: rgba(255, 255, 255, 26);
+            border: 1px solid rgba(255, 255, 255, 45);
+        }
+        QListWidget {
+            background-color: rgba(255, 255, 255, 14);
+            border: 1px solid rgba(255, 255, 255, 30);
+            border-radius: 8px;
+            padding: 6px;
+        }
+        QComboBox {
+            background-color: rgba(255, 255, 255, 24);
+            border-radius: 7px;
+            padding: 5px 10px;
+        }
+    """)
+
+    layout = QVBoxLayout(win)
+    layout.setContentsMargins(22, 20, 22, 20)
+    layout.setSpacing(12)
+
+    top_row = QHBoxLayout()
+    title = QLabel("📡 AirDrop & iPhone Continuity")
+    title.setFont(QFont("Inter", 15, QFont.Weight.Bold))
+    top_row.addWidget(title)
+    top_row.addStretch()
+
+    mode_box = QComboBox()
+    mode_box.addItems(["everyone", "contacts", "off"])
+    mode_box.setCurrentText(state.get("mode", "everyone"))
+    top_row.addWidget(QLabel("Allow me to be discovered by:"))
+    top_row.addWidget(mode_box)
+    layout.addLayout(top_row)
+
+    info = QLabel(
+        f"• LocalSend & KDE Connect active (saves incoming iPhone files to ~/Downloads)\n"
+        f"• Zero-App iPhone Safari AirDrop URL: {lan_url}"
+    )
+    info.setStyleSheet("color: #9FB0C7; font-size: 12px;")
+    layout.addWidget(info)
+
+    files_label = QLabel("Files Queued to Share & Nearby Devices:")
+    files_label.setFont(QFont("Inter", 12, QFont.Weight.DemiBold))
+    layout.addWidget(files_label)
+
+    device_list = QListWidget()
+    layout.addWidget(device_list)
+
+    def refresh_view() -> None:
+        device_list.clear()
+        for fpath in state.get("shared_files", []):
+            device_list.addItem(f"📄 Queued for iPhone download: {Path(fpath).name}")
+        for dev in discover_kdeconnect_devices():
+            device_list.addItem(f"📱 {dev['name']} ({dev['engine']}) — Ready")
+        if device_list.count() == 0:
+            device_list.addItem("📡 Radar scanning… Open LocalSend or scan Safari URL on your iPhone")
+
+    def on_mode_change(new_mode: str) -> None:
+        state["mode"] = new_mode
+        save_airdrop_state(state)
+
+    def on_pick_files() -> None:
+        picked, _ = QFileDialog.getOpenFileNames(win, "Select Files to Share via AirDrop")
+        if picked:
+            state["shared_files"] = picked
+            save_airdrop_state(state)
+            refresh_view()
+            for dev in discover_kdeconnect_devices():
+                send_via_kdeconnect(dev["id"], picked)
+
+    def on_open_localsend() -> None:
+        if shutil.which("localsend"):
+            subprocess.Popen(["localsend"] + state.get("shared_files", []))
+
+    mode_box.currentTextChanged.connect(on_mode_change)
+
+    btn_row = QHBoxLayout()
+    pick_btn = QPushButton("Choose Files to AirDrop…")
+    pick_btn.clicked.connect(on_pick_files)
+    btn_row.addWidget(pick_btn)
+
+    ls_btn = QPushButton("Open LocalSend Radar")
+    ls_btn.setObjectName("secondary")
+    ls_btn.clicked.connect(on_open_localsend)
+    btn_row.addWidget(ls_btn)
+
+    dl_btn = QPushButton("Open Downloads")
+    dl_btn.setObjectName("secondary")
+    dl_btn.clicked.connect(lambda: subprocess.Popen(["xdg-open", str(DOWNLOADS_DIR)]))
+    btn_row.addWidget(dl_btn)
+
+    layout.addLayout(btn_row)
+    refresh_view()
+    win.show()
+    return app.exec()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="GoldenGate OS AirDrop Suite")
+    parser.add_argument("--send", nargs="*", help="Queue & send one or more files via AirDrop")
+    parser.add_argument("--mode", choices=["everyone", "contacts", "off"], help="Set AirDrop visibility mode")
+    parser.add_argument("--status", action="store_true", help="Print AirDrop JSON status")
+    parser.add_argument("--serve-headless", action="store_true", help="Run Safari AirDrop HTTP bridge headlessly")
+    args = parser.parse_args(argv)
+
+    state = load_airdrop_state()
+    if args.mode:
+        state["mode"] = args.mode
+        save_airdrop_state(state)
+        if args.status:
+            print(json.dumps(state, indent=2))
+        return 0
+
+    if args.send:
+        state["shared_files"] = [str(Path(f).resolve()) for f in args.send if Path(f).exists()]
+        save_airdrop_state(state)
+
+    if args.status:
+        state["lan_url"] = f"http://{get_lan_ip()}:{state.get('port', 8765)}"
+        print(json.dumps(state, indent=2))
+        return 0
+
+    if args.serve_headless:
+        srv = http.server.ThreadingHTTPServer(("0.0.0.0", int(state.get("port", 8765))), SafariAirDropHandler)
+        srv.serve_forever()
+        return 0
+
+    return run_gui(args.send or [])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

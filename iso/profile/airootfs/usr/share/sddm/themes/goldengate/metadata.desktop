@@ -1,0 +1,12 @@
+[SddmGreeterTheme]
+Name=macOS 27 Golden Gate
+Description=macOS 27 Golden Gate Liquid Glass Lock Screen with Face ID status and first-boot fallback
+Author=GoldenGate OS
+Copyright=(c) 2026 GoldenGate OS
+License=GPL-2.0+
+Type=sddm-theme
+Version=27.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+QtVersion=6

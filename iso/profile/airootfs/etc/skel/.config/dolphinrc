@@ -1,0 +1,28 @@
+[General]
+BrowseThroughArchives=true
+GlobalViewProps=false
+ShowFullPath=false
+ShowSelectionToggle=false
+ShowSpaceInfo=true
+ShowZoomSlider=false
+
+[IconsMode]
+IconSize=64
+PreviewSize=64
+
+[KFileDialog Settings]
+Places Icons Auto-resize=false
+Places Icons Static Size=22
+
+[MainWindow]
+MenuBar=Disabled
+ToolBarsMovable=Disabled
+
+[PlacesPanel]
+IconSize=22
+
+[PreviewSettings]
+Plugins=appimagethumbnail,audiothumbnail,comicbookthumbnail,cursorthumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,directorythumbnail,fontthumbnail,imagethumbnail,jpegthumbnail,kraorathumbnail,windowsexethumbnail,windowsimagethumbnail,mobithumbnail,opendocumentthumbnail,gsthumbnail,rawthumbnail,svgthumbnail,ffmpegthumbs
+
+[Shortcuts]
+preview=/usr/bin/goldengate-quicklook

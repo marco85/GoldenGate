@@ -1,0 +1,14 @@
+[Desktop Entry]
+DefaultProfile=GoldenGate.profile
+
+[MainWindow]
+MenuBar=Disabled
+ToolBarsMovable=Disabled
+
+[Shortcuts]
+paste=Ctrl+V; Ctrl+Shift+V
+copy-text=Ctrl+Shift+C; Alt+C
+new-tab=Ctrl+T; Ctrl+Shift+T
+close-session=Ctrl+W; Ctrl+Shift+W
+find-text=Ctrl+F; Ctrl+Shift+F
+clear-history-and-reset=Ctrl+K

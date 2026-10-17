@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Surface 5 Hardware Checklist & Installer
+Exec=/usr/bin/goldengate-live-checklist
+Icon=system-software-install
+Terminal=false
+X-GNOME-Autostart-enabled=true

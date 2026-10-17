@@ -1,0 +1,20 @@
+# Surface Laptop 5 (Model 1950) Precision Touchpad & Touchscreen Quirks
+# Calibrates palm rejection, pressure thresholds, and high-res scroll units
+# to match native MacBook trackpad control and eliminate jumpy/fast 2-finger scrolling.
+
+[Surface Laptop 5 Precision Touchpad]
+MatchUdevType=touchpad
+MatchBus=usb
+MatchVendor=0x045E
+AttrPalmPressureThreshold=130
+AttrPalmSizeThreshold=55
+AttrThumbPressureThreshold=110
+AttrThumbSizeThreshold=45
+AttrResolutionHint=31x31
+
+[Generic Surface Touchpad Fallback]
+MatchUdevType=touchpad
+MatchName=*Microsoft*Touchpad*
+AttrPalmPressureThreshold=130
+AttrPalmSizeThreshold=55
+AttrResolutionHint=31x31

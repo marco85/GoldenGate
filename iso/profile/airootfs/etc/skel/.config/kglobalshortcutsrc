@@ -1,0 +1,28 @@
+[kwin]
+Overview=Meta+Up,Ctrl+Up,Mission Control (Overview)
+Expose=Ctrl+Down,Ctrl+Down,App Exposé (Current Desktop)
+ExposeAll=Launch (B),Ctrl+Up,Toggle Present Windows (All desktops)
+ShowDesktop=Meta+D,F11,Show Desktop
+Window Quick Tile Left=Meta+Left\tCtrl+Alt+Left,Meta+Left,Quick Tile Window to the Left
+Window Quick Tile Right=Meta+Right\tCtrl+Alt+Right,Meta+Right,Quick Tile Window to the Right
+Window Quick Tile Top=Meta+Up\tCtrl+Alt+Up,Meta+Up,Quick Tile Window to the Top
+Window Quick Tile Bottom=Meta+Down\tCtrl+Alt+Down,Meta+Down,Quick Tile Window to the Bottom
+Window Quick Tile Top Left=Ctrl+Alt+U,none,Quick Tile Window to the Top Left
+Window Quick Tile Top Right=Ctrl+Alt+I,none,Quick Tile Window to the Top Right
+Window Quick Tile Bottom Left=Ctrl+Alt+J,none,Quick Tile Window to the Bottom Left
+Window Quick Tile Bottom Right=Ctrl+Alt+K,none,Quick Tile Window to the Bottom Right
+Window Maximize=Ctrl+Alt+Return\tCtrl+Alt+F,Meta+PgUp,Maximize Window
+Window Minimize=Ctrl+M\tAlt+M,Meta+PgDown,Minimize Window
+Window Close=Ctrl+Q\tAlt+Q\tAlt+F4,Alt+F4,Close Window
+Switch One Desktop to the Left=Ctrl+Left,Meta+Ctrl+Left,Switch One Desktop to the Left
+Switch One Desktop to the Right=Ctrl+Right,Meta+Ctrl+Right,Switch One Desktop to the Right
+Walk Through Windows=Alt+Tab\tCtrl+Tab,Alt+Tab,Walk Through Windows
+
+[org.kde.krunner.desktop]
+_launch=Alt+Space\tCtrl+Space\tSearch,Alt+Space,KRunner (Spotlight)
+
+[org.kde.spectacle.desktop]
+ActiveWindowScreenShot=Ctrl+Shift+6,Meta+Print,Capture Active Window
+FullScreenScreenShot=Ctrl+Shift+3\tAlt+Shift+3,Shift+Print,Capture Entire Desktop
+RectangularRegionScreenShot=Ctrl+Shift+4\tAlt+Shift+4,Meta+Shift+S,Capture Rectangular Region
+_launch=Ctrl+Shift+5\tAlt+Shift+5,Print,Launch Spectacle (Screenshot HUD)

@@ -1,0 +1,767 @@
+{
+  "BookmarkBarEnabled": true,
+  "ManagedBookmarks": [
+    {
+      "toplevel_name": "Creative Toolbox"
+    },
+    {
+      "name": "AI Tools",
+      "children": [
+        {
+          "name": "ElevenLabs",
+          "url": "https://elevenlabs.io/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Goblin Tools",
+          "url": "https://goblin.tools/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Weavy AI",
+          "url": "https://www.weavy.ai/"
+        },
+        {
+          "name": "Higgsfield AI",
+          "url": "https://higgsfield.ai/"
+        },
+        {
+          "name": "Freepik AI",
+          "url": "https://www.freepik.com/ai/image-generator"
+        }
+      ]
+    },
+    {
+      "name": "Business Tools",
+      "children": [
+        {
+          "name": "Stripe",
+          "url": "https://stripe.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Lemon Squeezy",
+          "url": "https://www.lemonsqueezy.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Namecheap",
+          "url": "https://www.namecheap.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Beacons",
+          "url": "https://beacons.ai/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Payhip",
+          "url": "https://payhip.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Buy Me a Coffee",
+          "url": "https://buymeacoffee.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Manychat",
+          "url": "https://manychat.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Substack",
+          "url": "http://substack.com/?ref=creativefoundersclub.xyz"
+        }
+      ]
+    },
+    {
+      "name": "Content Ideas",
+      "children": [
+        {
+          "name": "Curaeted",
+          "url": "https://www.curaeted.co/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Eyecandy",
+          "url": "https://eyecannndy.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Social Proof Examples",
+          "url": "https://socialproofexamples.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Steep",
+          "url": "https://www.steep.design/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Death Generator",
+          "url": "https://deathgenerator.com"
+        },
+        {
+          "name": "BNTO",
+          "url": "https://bnto.vercel.app"
+        },
+        {
+          "name": "Website Headlines",
+          "url": "https://websiteheadlines.com/"
+        }
+      ]
+    },
+    {
+      "name": "Creative Assets",
+      "children": [
+        {
+          "name": "Reshot",
+          "url": "https://www.reshot.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Texture Labs",
+          "url": "https://texturelabs.org/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Simple Icons",
+          "url": "https://simpleicons.org/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "BLKMARKET",
+          "url": "https://blkmarket.com/product-category/free/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Pinspiry",
+          "url": "https://pinspiry.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Indieground Design",
+          "url": "https://indieground.net/shop-category/freebies/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "SVG Repo",
+          "url": "https://www.svgrepo.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Free Paper Texture",
+          "url": "https://free-paper-texture.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Pixel Surplus",
+          "url": "https://pixelsurplus.com/collections/free-textures/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Minimal Mockups",
+          "url": "https://www.minimalmockups.com/mockups/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Shots",
+          "url": "https://www.shots.so/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Unblast",
+          "url": "https://unblast.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Mockup World",
+          "url": "https://www.mockupworld.co/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Mockups Design",
+          "url": "https://mockups-design.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "LS Graphics",
+          "url": "https://www.ls.graphics/free-mockups/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Mockups Digital",
+          "url": "https://mockups.digital/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Unplash",
+          "url": "https://unsplash.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Pexels",
+          "url": "https://www.pexels.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Everypixel",
+          "url": "https://www.everypixel.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Pixabay",
+          "url": "https://pixabay.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Mixkit",
+          "url": "https://mixkit.co/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Openverse",
+          "url": "https://openverse.org/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Dupephotos",
+          "url": "https://dupephotos.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "O-dan",
+          "url": "https://o-dan.net/en/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Resource Boy",
+          "url": "https://resourceboy.com/"
+        },
+        {
+          "name": "Film Emulation for Darktable",
+          "url": "https://t3mujinpack.github.io/"
+        }
+      ]
+    },
+    {
+      "name": "Creative Tutorials",
+      "children": [
+        {
+          "name": "Graphic Design Basics",
+          "url": "https://youtu.be/GQS7wPujL2k?si=W6O79p9xiGuxZ6iO"
+        },
+        {
+          "name": "How to Choose Colors",
+          "url": "https://youtu.be/KMS3VwGh3HY?si=5_eGkyxfHSWlKd6o"
+        },
+        {
+          "name": "Type Design Resources",
+          "url": "https://typedesignresources.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Envato Tuts+",
+          "url": "https://tutsplus.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Canva Design School",
+          "url": "https://www.canva.com/design-school/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Design Principles",
+          "url": "https://principles.design/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Lapa Ninja Learn",
+          "url": "https://www.lapa.ninja/learn/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Degreeless Design",
+          "url": "https://www.degreeless.design/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "State of AI in Design",
+          "url": "https://www.stateofaidesign.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "UX Repo",
+          "url": "https://uxrepo.co/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Identify This Font",
+          "url": "https://www.reddit.com/r/identifythisfont/"
+        },
+        {
+          "name": "Graphic Design Reddit",
+          "url": "https://www.reddit.com/r/graphic_design/"
+        }
+      ]
+    },
+    {
+      "name": "Design Ideas",
+      "children": [
+        {
+          "name": "Cosmos",
+          "url": "https://www.cosmos.so/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Arena",
+          "url": "https://are.na/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Pinterest",
+          "url": "https://www.pinterest.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Muzli",
+          "url": "https://muz.li/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "The Dieline",
+          "url": "https://thedieline.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Lapa Ninja",
+          "url": "https://www.lapa.ninja/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Minimal Gallery",
+          "url": "https://minimal.gallery/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Email Love",
+          "url": "https://emaillove.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Book Cover Archive",
+          "url": "https://bookcoverarchive.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Trending Design",
+          "url": "https://trending.design/"
+        },
+        {
+          "name": "Pattern Club",
+          "url": "https://patternclub.io/"
+        },
+        {
+          "name": "Flyer Archive Japan",
+          "url": "https://flyer-jp.com/"
+        },
+        {
+          "name": "Archive PDF",
+          "url": "https://www.archivepdf.net/"
+        },
+        {
+          "name": "Vintage Logos",
+          "url": "https://www.flickr.com/photos/mr_carl/albums/72157604144345854/with/2342034701"
+        },
+        {
+          "name": "Curaeted",
+          "url": "https://www.curaeted.co/"
+        },
+        {
+          "name": "CARI Index of Aesthetic",
+          "url": "https://cari.institute/aesthetics"
+        },
+        {
+          "name": "Book Cover Archive",
+          "url": "https://bookcoverarchive.com/"
+        },
+        {
+          "name": "Headers Club",
+          "url": "https://headers.club"
+        },
+        {
+          "name": "Visual Journal",
+          "url": "https://visualjournal.it/"
+        },
+        {
+          "name": "Whole Earth Index",
+          "url": "https://wholeearth.info"
+        },
+        {
+          "name": "The Moving Poster",
+          "url": "https://themovingposter.com/"
+        },
+        {
+          "name": "Art of Titles",
+          "url": "https://artofthetitle.com/titles/"
+        },
+        {
+          "name": "Another Graphic",
+          "url": "https://anothergraphic.org/"
+        },
+        {
+          "name": "Typographic Posters",
+          "url": "https://www.typographicposters.com/archive"
+        },
+        {
+          "name": "Type Hunting",
+          "url": "https://typehunting.com/"
+        },
+        {
+          "name": "People’s Graphic Design Archive",
+          "url": "https://peoplesgdarchive.org/"
+        },
+        {
+          "name": "Booklet Library",
+          "url": "https://bookletlibrary.org/"
+        },
+        {
+          "name": "Logo System",
+          "url": "https://logosystem.co"
+        },
+        {
+          "name": "Connected Archives",
+          "url": "https://www.connected-archives.com/"
+        },
+        {
+          "name": "Film on Paper",
+          "url": "https://www.filmonpaper.com/"
+        },
+        {
+          "name": "Graphic Archive",
+          "url": "https://www.graphic-archive.com/"
+        },
+        {
+          "name": "Gallery 98 Ephemera",
+          "url": "https://gallery98.org/ephemera/"
+        },
+        {
+          "name": "EAGA",
+          "url": "https://eastasiangraphicsarchive.com/"
+        },
+        {
+          "name": "Calling Cards",
+          "url": "https://oracles.editionpatrickfrey.com/"
+        }
+      ]
+    },
+    {
+      "name": "Design Tools",
+      "children": [
+        {
+          "name": "Canva",
+          "url": "https://www.canva.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Framer",
+          "url": "https://www.framer.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Webflow",
+          "url": "https://webflow.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Photopea",
+          "url": "https://www.photopea.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Blender",
+          "url": "https://www.blender.org/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Davinci Resolve",
+          "url": "https://www.blackmagicdesign.com/products/davinciresolve/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Gimp",
+          "url": "https://www.gimp.org/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Krita",
+          "url": "https://krita.org/en/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Inkscape",
+          "url": "https://inkscape.org/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Darktable",
+          "url": "https://www.darktable.org/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Colorhunt",
+          "url": "https://colorhunt.co/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Paper Sizes",
+          "url": "https://papersizes.io/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Tooooools",
+          "url": "https://www.tooooools.app/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Same Energy",
+          "url": "https://same.energy/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Figma",
+          "url": "https://www.figma.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Penpot",
+          "url": "https://penpot.app/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Affinity by Canva",
+          "url": "https://www.affinity.studio/"
+        },
+        {
+          "name": "Text Behind Image",
+          "url": "https://textbehindimage.com/"
+        },
+        {
+          "name": "Wada Sanzo Color Dictionary",
+          "url": "https://sanzo-wada.dmbk.io/"
+        },
+        {
+          "name": "Template Maker",
+          "url": "https://templatemaker.nl/en/"
+        },
+        {
+          "name": "Collected",
+          "url": "https://collected.to"
+        },
+        {
+          "name": "What the Google Font",
+          "url": "https://serbyte.net/what-the-google-font"
+        },
+        {
+          "name": "Dither Garden",
+          "url": "https://www.dithergarden.com/"
+        },
+        {
+          "name": "Grainrad",
+          "url": "https://grainrad.com/"
+        },
+        {
+          "name": "Image Stripe Cutter",
+          "url": "https://stripecutter.com/"
+        }
+      ]
+    },
+    {
+      "name": "Knowledge",
+      "children": [
+        {
+          "name": "The Creative Marketer",
+          "url": "https://thecreativemarketer.net/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Top Interview Questions",
+          "url": "https://review.firstround.com/40-favorite-interview-questions-from-some-of-the-sharpest-folks-we-know/"
+        },
+        {
+          "name": "Goal Examples",
+          "url": "https://www.spinach.ai/goal-examples"
+        },
+        {
+          "name": "Convince Talent to Join",
+          "url": "https://www.ycombinator.com/library/5b-how-do-you-convince-someone-to-join-your-startup"
+        },
+        {
+          "name": "Scaling Growth Teams",
+          "url": "https://www.ycombinator.com/library/59-how-to-set-up-hire-and-scale-a-growth-strategy-and-team"
+        },
+        {
+          "name": "Building Team Culture",
+          "url": "https://www.ycombinator.com/library/6r-building-culture"
+        },
+        {
+          "name": "Remote Culture Playbook",
+          "url": "https://handbook.gitlab.com/handbook/company/culture/all-remote/guide/"
+        },
+        {
+          "name": "Startup Marketing Plan",
+          "url": "https://chatbotsmagazine.com/marketing-plan-and-chill-75f7e3d63358#.kgoqx0ahk"
+        },
+        {
+          "name": "Validate Your Idea",
+          "url": "https://www.lennysnewsletter.com/p/validating-your-startup-idea"
+        },
+        {
+          "name": "Learn SEO with Ahrefs",
+          "url": "https://ahrefs.com/seo"
+        },
+        {
+          "name": "SEO Learning Roadmap",
+          "url": "https://learningseo.io/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "F Gatekeeping",
+          "url": "https://fuckgatekeeping.com/"
+        },
+        {
+          "name": "Readymag Presentation Guide",
+          "url": "https://readymag.com/readymag /presentation-guide/"
+        },
+        {
+          "name": "Client Workflow Guide",
+          "url": "https://www.instagram.com/p/DWRFvykEfDA/?img_index=1"
+        },
+        {
+          "name": "Difference Between Brand & Visual Identity",
+          "url": "https://www.instagram.com/p/DNigXURThed/?img_index=1"
+        }
+      ]
+    },
+    {
+      "name": "Productivity",
+      "children": [
+        {
+          "name": "Google Keep",
+          "url": "https://keep.google.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "I Love PDF",
+          "url": "https://www.ilovepdf.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "PDFgear",
+          "url": "https://www.pdfgear.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Pomofocus",
+          "url": "https://pomofocus.io/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Blip",
+          "url": "https://blip.net/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Ninite",
+          "url": "https://ninite.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Figjam",
+          "url": "https://www.figma.com/figjam/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Tinywow",
+          "url": "https://tinywow.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Canva Whiteboard",
+          "url": "https://www.canva.com/online-whiteboard/templates/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "World Time Buddy",
+          "url": "https://www.worldtimebuddy.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "NeetoCal",
+          "url": "https://www.neeto.com/neetocal/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "TextFX by Google",
+          "url": "https://textfx.withgoogle.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "PFPmaker",
+          "url": "https://pfpmaker.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Open Source Alternative",
+          "url": "https://www.opensourcealternative.to/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "VirusTotal",
+          "url": "https://www.virustotal.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Notion",
+          "url": "https://www.notion.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "There",
+          "url": "https://there.pm/"
+        },
+        {
+          "name": "Pomodoro Timer",
+          "url": "https://pomodorotimer.online/"
+        }
+      ]
+    },
+    {
+      "name": "Typography",
+      "children": [
+        {
+          "name": "Use & Modify",
+          "url": "https://usemodify.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Beautiful Web Type",
+          "url": "https://beautifulwebtype.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Free Faces",
+          "url": "https://www.freefaces.gallery/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Font In Use",
+          "url": "https://fontsinuse.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Uncut",
+          "url": "https://uncut.wtf/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Collletttivo",
+          "url": "https://www.collletttivo.it/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Fontshare",
+          "url": "https://www.fontshare.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Google Fonts",
+          "url": "https://fonts.google.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Font Squirrel",
+          "url": "https://www.fontsquirrel.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "DaFont",
+          "url": "https://www.dafont.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Font In Use",
+          "url": "https://fontsinuse.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Wordmark",
+          "url": "https://wordmark.it/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Fontpair",
+          "url": "https://www.fontpair.co/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Font Brief",
+          "url": "https://www.fontbrief.com/fontbrief"
+        }
+      ]
+    },
+    {
+      "name": "UIUX",
+      "children": [
+        {
+          "name": "ecomm.design",
+          "url": "https://ecomm.design/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Design System Surf",
+          "url": "https://designsystems.surf/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Uiverse",
+          "url": "https://uiverse.io/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Typescale",
+          "url": "https://typescale.io/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "UI Fonts",
+          "url": "https://www.uifonts.app/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Pushkeen",
+          "url": "https://pushkeen.ai/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Thiings",
+          "url": "https://www.thiings.co/things/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "UI Bundle",
+          "url": "https://uibundle.com/category/ui-kits?price=freebie"
+        },
+        {
+          "name": "Figma Community",
+          "url": "https://www.figma.com/community/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Best Figma Plugins",
+          "url": "https://bestfigmaplugins.com/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Apple Design Resources",
+          "url": "https://developer.apple.com/design/resources/?ref=creativefoundersclub.xyz"
+        },
+        {
+          "name": "Material Design",
+          "url": "https://m3.material.io/?ref=creativefoundersclub.xyz"
+        }
+      ]
+    }
+  ]
+}

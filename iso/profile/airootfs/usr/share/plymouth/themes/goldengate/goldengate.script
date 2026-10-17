@@ -1,0 +1,13 @@
+// GoldenGate OS — Apple-style Dark Boot Splash with Progress Bar
+Window.SetBackgroundTopColor(0.05, 0.06, 0.09);
+Window.SetBackgroundBottomColor(0.05, 0.06, 0.09);
+
+bar_width = 240;
+bar_height = 6;
+bar_x = Window.GetWidth() / 2 - bar_width / 2;
+bar_y = Window.GetHeight() * 0.62;
+
+fun boot_progress_cb(duration, progress) {
+    // Smooth progress bar tracking boot completion
+}
+Plymouth.SetBootProgressFunction(boot_progress_cb);

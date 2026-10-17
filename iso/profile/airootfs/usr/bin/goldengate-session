@@ -1,0 +1,49 @@
+#!/bin/sh
+# GoldenGate OS — macOS 27 Golden Gate Wayland Session Wrapper
+# Initializes Liquid Glass theme, Surface Laptop 5 150% fractional scaling,
+# Fcitx5 (EN/KO/JA), xremap hybrid keymapper, persistent clipboard, and 3-engine AirDrop daemon.
+set -e
+
+export GTK_THEME="WhiteSur-Dark"
+export QT_STYLE_OVERRIDE="kvantum"
+export XDG_CURRENT_DESKTOP="KDE"
+export KDE_SESSION_VERSION="6"
+export LIBVA_DRIVER_NAME="iHD"
+export GTK_MODULES="appmenu-gtk-module"
+export XMODIFIERS="@im=fcitx"
+
+# Initialize user config from /etc/skel on first login
+if [ ! -f "$HOME/.config/goldengate-initialized" ]; then
+    mkdir -p "$HOME/.config" "$HOME/.local/share" "$HOME/Desktop" "$HOME/Downloads" "$HOME/Documents" "$HOME/Pictures"
+    cp -rn /etc/skel/.config/* "$HOME/.config/" 2>/dev/null || true
+    cp -rn /etc/skel/.local/share/* "$HOME/.local/share/" 2>/dev/null || true
+    /usr/bin/goldengate-liquid-glass --apply-default >/dev/null 2>&1 || true
+    touch "$HOME/.config/goldengate-initialized"
+fi
+
+# Start hybrid Surface Ctrl + Mac Alt-next-to-Spacebar keymapper if available
+if command -v xremap >/dev/null 2>&1 && [ -f /etc/goldengate/xremap.yml ]; then
+    xremap --watch /etc/goldengate/xremap.yml >/dev/null 2>&1 &
+fi
+
+# Start persistent Wayland clipboard watcher
+if [ -x /usr/bin/goldengate-clipboard-daemon ]; then
+    /usr/bin/goldengate-clipboard-daemon --daemon >/dev/null 2>&1 &
+fi
+
+# Start 3-engine AirDrop & iPhone Continuity background daemon
+if [ -x /usr/bin/goldengate-airdrop-daemon ]; then
+    /usr/bin/goldengate-airdrop-daemon >/dev/null 2>&1 &
+fi
+
+# Start multi-touch trackpad gesture daemon
+if command -v libinput-gestures >/dev/null 2>&1; then
+    libinput-gestures >/dev/null 2>&1 &
+fi
+
+# Launch KDE Plasma 6 Wayland session
+if [ -x /usr/lib/plasma-dbus-run-session-if-needed ]; then
+    exec /usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland
+else
+    exec /usr/bin/startplasma-wayland
+fi

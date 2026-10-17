@@ -1,0 +1,15 @@
+# Build outputs & ISOs
+out/
+work/
+boot-test/
+*.iso
+*.pkg.tar.zst
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# macOS metadata
+.DS_Store
+._*

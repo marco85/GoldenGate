@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Creative Toolbox
+Name[ko]=크리에이티브 툴박스
+Comment=176 hand-picked creative tools, fonts, textures, and design resources from Creative Founders Club
+Exec=/usr/bin/goldengate-toolbox
+Icon=applications-graphics
+Terminal=false
+Categories=Graphics;Design;Utility;
+StartupNotify=true

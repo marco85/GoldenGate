@@ -1,0 +1,33 @@
+#!/bin/sh
+# GoldenGate OS — Calamares Post-Install Target Configuration Hook
+# Configures Surface Laptop 5 kernel parameters, system services, locales (EN/KO/JA),
+# Face ID IR camera defaults, and removes live-only autologin/checklist configs.
+set -e
+
+# 1. Enable English, Korean, and Japanese UTF-8 locales
+sed -i 's/^#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen 2>/dev/null || true
+sed -i 's/^#ko_KR.UTF-8 UTF-8/ko_KR.UTF-8 UTF-8/' /etc/locale.gen 2>/dev/null || true
+sed -i 's/^#ja_JP.UTF-8 UTF-8/ja_JP.UTF-8 UTF-8/' /etc/locale.gen 2>/dev/null || true
+locale-gen 2>/dev/null || true
+
+# 2. Configure GRUB kernel parameters for Surface Laptop 5 (s2idle, i915 PSR, Plymouth splash)
+if [ -f /etc/default/grub ]; then
+    sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="mem_sleep_default=s2idle i915.enable_psr=1 quiet splash"/' /etc/default/grub
+    grub-mkconfig -o /boot/grub/grub.cfg 2>/dev/null || true
+fi
+
+# 3. Enable essential system & Surface Laptop 5 services
+for svc in sddm NetworkManager bluetooth avahi-daemon iptsd thermald power-profiles-daemon systemd-oomd fstrim.timer; do
+    systemctl enable "$svc" 2>/dev/null || true
+done
+
+# 4. Auto-configure Surface Laptop 5 IR Camera device path for Howdy Face ID
+if [ -x /usr/bin/goldengate-faceid-setup ]; then
+    /usr/bin/goldengate-faceid-setup --configure >/dev/null 2>&1 || true
+fi
+
+# 5. Remove live-session-only autologin and live checklist autostart
+rm -f /etc/sddm.conf.d/20-live-autologin.conf
+rm -f /etc/xdg/autostart/goldengate-live-checklist.desktop
+
+exit 0

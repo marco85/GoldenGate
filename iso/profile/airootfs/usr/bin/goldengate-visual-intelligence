@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+"""
+GoldenGate OS — macOS 27 "Visual Intelligence" Contextual Screen Overlay
+Captures the active window or screen region and lets the user inspect, extract text,
+or ask Antigravity / Claude / Codex about whatever is on screen.
+Bound to Ctrl+Shift+Space / Alt+Shift+Space.
+"""
+from __future__ import annotations
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+
+def capture_screen(output_path: Path) -> bool:
+    if shutil.which("spectacle"):
+        res = subprocess.run(
+            ["spectacle", "-b", "-n", "-a", "-o", str(output_path)],
+            check=False,
+        )
+        return res.returncode == 0 and output_path.exists()
+    return False
+
+
+def query_ai_assistant(prompt: str, image_path: Path | None = None) -> dict:
+    """Dispatches a Visual Intelligence prompt to Claude CLI, Codex CLI, or Antigravity CLI."""
+    full_prompt = f"{prompt}\nImage: {image_path}" if image_path and image_path.exists() else prompt
+    for binary, args in (
+        ("claude", ["-p", full_prompt]),
+        ("agy", ["ask", full_prompt]),
+        ("antigravity", ["ask", full_prompt]),
+        ("codex", ["exec", full_prompt]),
+    ):
+        if shutil.which(binary):
+            try:
+                res = subprocess.run(
+                    [binary] + args,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
+                if res.returncode == 0 and res.stdout.strip():
+                    return {"engine": binary, "response": res.stdout.strip()}
+            except Exception:
+                pass
+    return {
+        "engine": "fallback",
+        "response": "Visual Intelligence ready. Sign in to Antigravity, Claude, or Codex in the Setup Assistant to analyze screen captures.",
+    }
+
+
+def run_gui() -> int:
+    try:
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QHBoxLayout,
+            QLabel,
+            QLineEdit,
+            QPlainTextEdit,
+            QPushButton,
+            QVBoxLayout,
+            QWidget,
+        )
+    except ImportError:
+        print("Visual Intelligence CLI ready.")
+        return 0
+
+    shot_path = Path(tempfile.gettempdir()) / "goldengate-visual-intelligence.png"
+    capture_screen(shot_path)
+
+    app = QApplication(sys.argv)
+    win = QWidget()
+    win.setWindowTitle("Visual Intelligence — Golden Gate")
+    win.setFixedSize(560, 380)
+    win.setStyleSheet("""
+        QWidget {
+            background-color: rgba(24, 26, 36, 238);
+            color: #F5F7FA;
+            border: 1px solid rgba(255, 255, 255, 50);
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+        }
+        QLineEdit, QPlainTextEdit {
+            background-color: rgba(255, 255, 255, 20);
+            border: 1px solid rgba(255, 255, 255, 38);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #FFFFFF;
+        }
+        QPushButton {
+            background-color: #0A84FF;
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+        }
+    """)
+
+    layout = QVBoxLayout(win)
+    layout.setContentsMargins(18, 16, 18, 16)
+    layout.setSpacing(10)
+
+    title = QLabel("✨ Visual Intelligence — Ask About Screen")
+    title.setFont(QFont("Inter", 14, QFont.Weight.Bold))
+    title.setStyleSheet("border: none; background: transparent;")
+    layout.addWidget(title)
+
+    row = QHBoxLayout()
+    inp = QLineEdit()
+    inp.setPlaceholderText("Summarize this window, translate text, or extract dates…")
+    ask_btn = QPushButton("Analyze")
+    row.addWidget(inp, stretch=1)
+    row.addWidget(ask_btn)
+    layout.addLayout(row)
+
+    output = QPlainTextEdit()
+    output.setReadOnly(True)
+    output.setPlaceholderText("Screen context captured. Type a question and press Enter.")
+    layout.addWidget(output, stretch=1)
+
+    def on_ask() -> None:
+        q = inp.text().strip() or "Summarize the active window content concisely."
+        res = query_ai_assistant(q, shot_path)
+        output.setPlainText(f"[{res['engine']}]\n\n{res['response']}")
+
+    inp.returnPressed.connect(on_ask)
+    ask_btn.clicked.connect(on_ask)
+    inp.setFocus()
+    win.show()
+    return app.exec()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="GoldenGate OS Visual Intelligence")
+    parser.add_argument("--ask", type=str, help="Ask a question directly via CLI")
+    args = parser.parse_args(argv)
+    if args.ask:
+        print(json.dumps(query_ai_assistant(args.ask), indent=2))
+        return 0
+    return run_gui()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

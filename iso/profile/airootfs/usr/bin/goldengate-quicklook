@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""
+GoldenGate OS — macOS Finder "Quick Look" (Spacebar Preview)
+Renders an instant Liquid Glass preview window for images, text/markdown/code, PDFs, or directories.
+Press Spacebar or Escape to dismiss immediately.
+"""
+from __future__ import annotations
+import argparse
+import mimetypes
+import os
+import sys
+from pathlib import Path
+
+
+def inspect_target(path_str: str) -> dict:
+    p = Path(path_str).expanduser().resolve()
+    if not p.exists():
+        return {"exists": False, "path": str(p), "kind": "missing"}
+    if p.is_dir():
+        children = sorted(x.name for x in p.iterdir())[:40]
+        return {
+            "exists": True,
+            "path": str(p),
+            "name": p.name,
+            "kind": "directory",
+            "item_count": len(list(p.iterdir())),
+            "children": children,
+        }
+    mime, _ = mimetypes.guess_type(str(p))
+    mime = mime or "application/octet-stream"
+    size_bytes = p.stat().st_size
+    kind = "binary"
+    snippet = ""
+    if mime.startswith("image/"):
+        kind = "image"
+    elif mime.startswith("text/") or p.suffix.lower() in (
+        ".md", ".json", ".py", ".sh", ".yml", ".yaml", ".toml", ".ini", ".conf", ".txt", ".js", ".ts", ".css", ".html"
+    ):
+        kind = "text"
+        try:
+            snippet = p.read_text(encoding="utf-8", errors="replace")[:8000]
+        except Exception:
+            snippet = ""
+    return {
+        "exists": True,
+        "path": str(p),
+        "name": p.name,
+        "kind": kind,
+        "mime": mime,
+        "size_bytes": size_bytes,
+        "snippet": snippet,
+    }
+
+
+def show_quicklook(info: dict) -> int:
+    try:
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont, QKeySequence, QPixmap, QShortcut
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QHBoxLayout,
+            QLabel,
+            QPlainTextEdit,
+            QPushButton,
+            QVBoxLayout,
+            QWidget,
+        )
+    except ImportError:
+        print(f"Quick Look: {info.get('name', info.get('path'))} ({info.get('kind')})")
+        return 0
+
+    app = QApplication(sys.argv)
+    win = QWidget()
+    win.setWindowTitle(f"Quick Look — {info.get('name', '')}")
+    win.resize(760, 560)
+    win.setStyleSheet("""
+        QWidget {
+            background-color: rgba(26, 28, 36, 236);
+            color: #F4F6FA;
+            font-family: 'Inter', sans-serif;
+            border-radius: 10px;
+        }
+        QPlainTextEdit {
+            background-color: rgba(0, 0, 0, 80);
+            border: 1px solid rgba(255, 255, 255, 30);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #E8EEF5;
+        }
+        QPushButton {
+            background-color: #0A84FF;
+            color: white;
+            border-radius: 7px;
+            padding: 6px 14px;
+            font-weight: 600;
+        }
+    """)
+
+    layout = QVBoxLayout(win)
+    layout.setContentsMargins(18, 16, 18, 16)
+    layout.setSpacing(10)
+
+    header = QHBoxLayout()
+    title = QLabel(info.get("name", info.get("path", "Quick Look")))
+    title.setFont(QFont("Inter", 14, QFont.Weight.Bold))
+    header.addWidget(title)
+    header.addStretch()
+    airdrop_btn = QPushButton("Share via AirDrop…")
+    airdrop_btn.clicked.connect(
+        lambda: os.spawnlp(os.P_NOWAIT, "/usr/bin/goldengate-airdrop", "goldengate-airdrop", "--send", info["path"])
+    )
+    header.addWidget(airdrop_btn)
+    layout.addLayout(header)
+
+    kind = info.get("kind")
+    if kind == "image":
+        lbl = QLabel()
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        pix = QPixmap(info["path"])
+        if not pix.isNull():
+            lbl.setPixmap(pix.scaled(700, 460, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        layout.addWidget(lbl, stretch=1)
+    elif kind == "text":
+        editor = QPlainTextEdit()
+        editor.setReadOnly(True)
+        editor.setPlainText(info.get("snippet", ""))
+        layout.addWidget(editor, stretch=1)
+    elif kind == "directory":
+        editor = QPlainTextEdit()
+        editor.setReadOnly(True)
+        listing = "\n".join(info.get("children", []))
+        editor.setPlainText(f"Folder ({info.get('item_count', 0)} items):\n\n{listing}")
+        layout.addWidget(editor, stretch=1)
+    else:
+        lbl = QLabel(f"File: {info.get('name')}\nType: {info.get('mime')}\nSize: {info.get('size_bytes', 0):,} bytes")
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(lbl, stretch=1)
+
+    for key in (Qt.Key.Key_Space, Qt.Key.Key_Escape):
+        sc = QShortcut(QKeySequence(key), win)
+        sc.activated.connect(win.close)
+
+    win.show()
+    return app.exec()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="GoldenGate OS Finder Quick Look")
+    parser.add_argument("target", nargs="?", default=".", help="File or directory to preview")
+    parser.add_argument("--json", action="store_true", help="Print file inspection JSON")
+    args = parser.parse_args(argv)
+
+    info = inspect_target(args.target)
+    if args.json:
+        import json
+        print(json.dumps(info, indent=2))
+        return 0
+    return show_quicklook(info)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

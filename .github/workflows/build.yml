@@ -1,0 +1,43 @@
+name: build
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["iso/**", "tools/**", ".github/workflows/build.yml"]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-config:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Configuration & Subsystem Tests
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq python3-pytest python3-yaml
+          python3 -m pytest -v iso/tests/test_config.py
+
+  iso:
+    needs: verify-config
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free Runner Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+      - name: Build GoldenGate OS Arch ISO
+        run: |
+          docker run --rm --privileged -v "$PWD":/w -w /w archlinux:latest bash iso/build.sh
+      - name: Verify ISO Image & FAT32 / 16GB USB Size Constraints
+        run: |
+          python3 -m pytest -v iso/tests/test_image.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goldengate-iso
+          path: out/*.iso
+          retention-days: 5
+          compression-level: 0

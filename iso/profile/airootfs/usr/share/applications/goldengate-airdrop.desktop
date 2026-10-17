@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=AirDrop
+Name[ko]=AirDrop
+Comment=Send and receive files instantly with iPhone, iPad, and Mac
+Exec=/usr/bin/goldengate-airdrop --send %F
+Icon=preferences-system-network-share
+Terminal=false
+Categories=Network;FileTransfer;Utility;
+MimeType=application/octet-stream;inode/directory;
+StartupNotify=true

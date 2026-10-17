@@ -1,0 +1,21 @@
+[%General]
+author=GoldenGate OS
+comment=macOS 27 Golden Gate Liquid Glass Theme
+translucent_windows=true
+blurring=true
+popup_blurring=true
+reduce_window_opacity=27
+reduce_menu_opacity=32
+respect_DE=true
+scrollable_menu=true
+submenu_overlap=0
+tooltip_delay=300
+tree_branch_line=false
+composite=true
+
+[Hacks]
+transparent_dolphin_view=true
+transparent_pcmanfm_sidepane=true
+blur_translucent=true
+transparent_menutitle=true
+kcapacitybar_as_progressbar=true

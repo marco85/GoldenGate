@@ -1,0 +1,238 @@
+#!/usr/bin/env python3
+"""
+GoldenGate OS — Creative Founders Club "The Toolbox" Native App
+Browses, searches, and launches all 176 curated creative tools, typography foundries,
+UI/UX kits, and design resources from `/usr/share/goldengate/cfc-toolbox.json`.
+Styled with macOS 27 Golden Gate edge-to-edge colored sidebar and Liquid Glass UI.
+"""
+from __future__ import annotations
+import argparse
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+DEFAULT_DB = Path("/usr/share/goldengate/cfc-toolbox.json")
+LOCAL_FALLBACK = (
+    Path(__file__).resolve().parents[1] / "share" / "goldengate" / "cfc-toolbox.json"
+)
+
+
+def load_toolbox_db(db_path: Path | None = None) -> list[dict]:
+    for candidate in ([db_path] if db_path else []) + [DEFAULT_DB, LOCAL_FALLBACK]:
+        if candidate and candidate.is_file():
+            try:
+                data = json.loads(candidate.read_text(encoding="utf-8"))
+                return data if isinstance(data, list) else []
+            except Exception:
+                pass
+    return []
+
+
+def filter_toolbox(items: list[dict], category: str = "All", query: str = "") -> list[dict]:
+    q = query.strip().lower()
+    results = []
+    for item in items:
+        if category and category != "All" and item.get("category") != category:
+            continue
+        if q:
+            haystack = f"{item.get('name', '')} {item.get('category', '')} {item.get('description', '')}".lower()
+            if q not in haystack:
+                continue
+        results.append(item)
+    return results
+
+
+def run_gui() -> int:
+    try:
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QHBoxLayout,
+            QLabel,
+            QLineEdit,
+            QListWidget,
+            QListWidgetItem,
+            QPushButton,
+            QSplitter,
+            QVBoxLayout,
+            QWidget,
+        )
+    except ImportError:
+        items = load_toolbox_db()
+        print(f"Creative Founders Club Toolbox loaded ({len(items)} items).")
+        return 0
+
+    items = load_toolbox_db()
+    categories = ["All"] + sorted({item.get("category", "General") for item in items})
+
+    app = QApplication(sys.argv)
+    win = QWidget()
+    win.setWindowTitle("Creative Founders Club — The Toolbox")
+    win.resize(860, 560)
+    win.setStyleSheet("""
+        QWidget {
+            background-color: rgba(24, 26, 36, 238);
+            color: #F4F6FA;
+            font-family: 'Inter', sans-serif;
+            border-radius: 10px;
+        }
+        QListWidget#sidebar {
+            background-color: rgba(18, 20, 28, 220);
+            border-right: 1px solid rgba(255, 255, 255, 24);
+            border-radius: 0px;
+            padding: 8px 6px;
+            font-size: 13px;
+        }
+        QListWidget#sidebar::item {
+            padding: 8px 12px;
+            border-radius: 7px;
+        }
+        QListWidget#sidebar::item:selected {
+            background-color: rgba(10, 132, 255, 190);
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+        QListWidget#results {
+            background-color: rgba(255, 255, 255, 10);
+            border: 1px solid rgba(255, 255, 255, 24);
+            border-radius: 8px;
+            padding: 6px;
+        }
+        QListWidget#results::item {
+            padding: 10px 12px;
+            border-radius: 7px;
+        }
+        QListWidget#results::item:selected {
+            background-color: rgba(10, 132, 255, 160);
+        }
+        QLineEdit {
+            background-color: rgba(255, 255, 255, 20);
+            border: 1px solid rgba(255, 255, 255, 38);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #FFFFFF;
+        }
+        QPushButton {
+            background-color: #0A84FF;
+            color: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+        }
+    """)
+
+    outer = QHBoxLayout(win)
+    outer.setContentsMargins(0, 0, 0, 0)
+    outer.setSpacing(0)
+
+    # Edge-to-Edge Colored Category Sidebar
+    sidebar = QListWidget()
+    sidebar.setObjectName("sidebar")
+    sidebar.setFixedWidth(210)
+    icons = {
+        "All": "✨",
+        "AI Tools": "🤖",
+        "Business Tools": "💼",
+        "Content Ideas": "🎬",
+        "Creative Assets": "🎨",
+        "Creative Tutorials": "🎓",
+        "Design Ideas": "💡",
+        "Design Tools": "🖌️",
+        "Knowledge": "📚",
+        "Productivity": "⚡",
+        "Typography": "🔤",
+        "UIUX": "📐",
+    }
+    for cat in categories:
+        li = QListWidgetItem(f"{icons.get(cat, '📁')}  {cat}")
+        li.setData(Qt.ItemDataRole.UserRole, cat)
+        sidebar.addItem(li)
+    sidebar.setCurrentRow(0)
+    outer.addWidget(sidebar)
+
+    # Main content pane
+    right_pane = QWidget()
+    r_layout = QVBoxLayout(right_pane)
+    r_layout.setContentsMargins(20, 18, 20, 18)
+    r_layout.setSpacing(12)
+
+    top_row = QHBoxLayout()
+    title = QLabel("Creative Founders Club — The Toolbox")
+    title.setFont(QFont("Inter", 15, QFont.Weight.Bold))
+    top_row.addWidget(title)
+    top_row.addStretch()
+    search = QLineEdit()
+    search.setPlaceholderText("Search 176 creative tools, fonts, textures…")
+    search.setFixedWidth(280)
+    top_row.addWidget(search)
+    r_layout.addLayout(top_row)
+
+    results_list = QListWidget()
+    results_list.setObjectName("results")
+    r_layout.addWidget(results_list, stretch=1)
+
+    bottom_row = QHBoxLayout()
+    detail_lbl = QLabel("Select a tool to view its description or press Enter to open.")
+    detail_lbl.setWordWrap(True)
+    detail_lbl.setStyleSheet("color: #A8B5C8; font-size: 12px;")
+    bottom_row.addWidget(detail_lbl, stretch=1)
+    open_btn = QPushButton("Open in Browser ↗")
+    bottom_row.addWidget(open_btn)
+    r_layout.addLayout(bottom_row)
+
+    def refresh_results() -> None:
+        cat_item = sidebar.currentItem()
+        cat = cat_item.data(Qt.ItemDataRole.UserRole) if cat_item else "All"
+        matched = filter_toolbox(items, category=cat, query=search.text())
+        results_list.clear()
+        for entry in matched:
+            row = QListWidgetItem(f"{entry['name']}  —  [{entry['category']}]\n{entry['description']}")
+            row.setData(Qt.ItemDataRole.UserRole, entry)
+            results_list.addItem(row)
+        if results_list.count() > 0:
+            results_list.setCurrentRow(0)
+
+    def on_select() -> None:
+        cur = results_list.currentItem()
+        if cur:
+            entry = cur.data(Qt.ItemDataRole.UserRole)
+            detail_lbl.setText(f"{entry['name']}: {entry['url']}")
+
+    def on_open() -> None:
+        cur = results_list.currentItem()
+        if cur:
+            entry = cur.data(Qt.ItemDataRole.UserRole)
+            url = entry.get("url")
+            if url and shutil.which("xdg-open"):
+                subprocess.Popen(["xdg-open", url])
+
+    sidebar.currentItemChanged.connect(lambda _a, _b: refresh_results())
+    search.textChanged.connect(lambda _: refresh_results())
+    results_list.currentItemChanged.connect(lambda _a, _b: on_select())
+    results_list.itemActivated.connect(lambda _: on_open())
+    open_btn.clicked.connect(on_open)
+
+    refresh_results()
+    outer.addWidget(right_pane, stretch=1)
+    win.show()
+    return app.exec()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="GoldenGate OS Creative Founders Club Toolbox")
+    parser.add_argument("--search", type=str, help="Search query to filter tools and output JSON")
+    parser.add_argument("--category", type=str, default="All", help="Category filter")
+    args = parser.parse_args(argv)
+
+    if args.search is not None or args.category != "All":
+        db = load_toolbox_db()
+        print(json.dumps(filter_toolbox(db, category=args.category, query=args.search or ""), indent=2))
+        return 0
+    return run_gui()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

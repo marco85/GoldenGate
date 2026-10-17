@@ -1,0 +1,21 @@
+#!/bin/sh
+# GoldenGate OS — Background AirDrop & Continuity Daemon
+# Launches:
+# 1. LocalSend background receiver (saves to ~/Downloads)
+# 2. KDE Connect daemon (Universal Clipboard + iPhone Notifications)
+# 3. GoldenGate Zero-App Safari AirDrop HTTP receiver on port 8765
+set -u
+
+mkdir -p "$HOME/Downloads"
+
+if command -v localsend >/dev/null 2>&1; then
+    localsend --hidden >/dev/null 2>&1 &
+fi
+
+if [ -x /usr/lib/kdeconnectd ]; then
+    /usr/lib/kdeconnectd >/dev/null 2>&1 &
+elif command -v kdeconnectd >/dev/null 2>&1; then
+    kdeconnectd >/dev/null 2>&1 &
+fi
+
+exec /usr/bin/goldengate-airdrop --serve-headless

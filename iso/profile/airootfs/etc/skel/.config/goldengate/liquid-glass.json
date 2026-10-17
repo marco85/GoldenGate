@@ -1,0 +1,8 @@
+{
+  "glass_level": 78,
+  "appearance": "dark",
+  "corner_radius": 10,
+  "colored_sidebars": true,
+  "tile_margins": 8,
+  "menu_clutter_control": true
+}

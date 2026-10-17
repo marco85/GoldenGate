@@ -1,0 +1,19 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "marcus@goldengate.local",
+                "Name": "GoldenGate OS"
+            }
+        ],
+        "Category": "Plasma Layout",
+        "Description": "macOS 27 Golden Gate Top Global Menu Bar (with Clutter Control) and Floating Liquid Glass Dock",
+        "Id": "org.kde.plasma.desktop.goldenGateLayout",
+        "License": "GPL-2.0+",
+        "Name": "macOS 27 Golden Gate Layout"
+    },
+    "X-Plasma-Shell": "plasmashell",
+    "X-Plasma-ContainmentCategories": [
+        "panel"
+    ]
+}

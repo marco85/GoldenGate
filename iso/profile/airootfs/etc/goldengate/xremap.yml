@@ -1,0 +1,41 @@
+# GoldenGate OS Hybrid Surface + Mac Keymap Configuration
+# Designed for Microsoft Surface Laptop 5:
+# 1. Physical Ctrl works as Command (matching the printed "Ctrl" keycap on the Surface keyboard)
+# 2. Physical Alt (next to Spacebar, Mac Command position) ALSO triggers Command shortcuts
+# 3. Terminal-aware Smart Copy/Paste so Ctrl+V / Alt+V always pastes in terminals
+
+keymap:
+  - name: Terminal Smart Copy-Paste & Mac Shortcuts
+    application:
+      only: [org.kde.konsole, konsole, kitty, Alacritty, com.mitchellh.ghostty, foot]
+    remap:
+      # Both Ctrl+V and Alt+V paste cleanly inside terminals
+      C-v: C-Shift-v
+      M-v: C-Shift-v
+      # Alt+C copies inside terminals (while Ctrl+C remains available for interrupt or smart copy)
+      M-c: C-Shift-c
+      M-t: C-Shift-t
+      M-w: C-Shift-w
+      M-f: C-Shift-f
+      M-n: C-Shift-n
+      M-q: A-F4
+
+  - name: Global Mac Muscle-Memory Bridge (Alt next to Spacebar mirrors Ctrl/Command)
+    application:
+      not: [org.kde.konsole, konsole, kitty, Alacritty, com.mitchellh.ghostty, foot]
+    remap:
+      M-c: C-c
+      M-v: C-v
+      M-x: C-x
+      M-a: C-a
+      M-z: C-z
+      M-Shift-z: C-Shift-z
+      M-s: C-s
+      M-f: C-f
+      M-t: C-t
+      M-w: C-w
+      M-n: C-n
+      M-r: C-r
+      M-l: C-l
+      M-p: C-p
+      M-q: A-F4

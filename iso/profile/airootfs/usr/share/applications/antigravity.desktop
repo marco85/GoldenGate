@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Antigravity
+Comment=Google Antigravity Agentic Coding IDE (v2.24.0)
+Exec=/opt/antigravity/antigravity --ozone-platform-hint=auto %F
+Icon=antigravity
+Terminal=false
+Categories=Development;IDE;
+StartupNotify=true
+StartupWMClass=Antigravity

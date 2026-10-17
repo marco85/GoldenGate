@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Liquid Glass & Appearance
+Name[ko]=리퀴드 글래스 및 화면 스타일
+Comment=Configure macOS 27 Golden Gate Liquid Glass translucency slider, sidebars, and window snapping
+Exec=/usr/bin/goldengate-liquid-glass
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Settings;DesktopSettings;
+StartupNotify=true

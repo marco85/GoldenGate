@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=GoldenGate OS
+Description=macOS 27 Golden Gate Apple-Style Progress Bar Splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/goldengate
+ScriptFile=/usr/share/plymouth/themes/goldengate/goldengate.script

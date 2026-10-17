@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=macOS 27 Golden Gate (Wayland)
+Comment=GoldenGate OS Liquid Glass Desktop for Surface Laptop 5
+Exec=/usr/bin/goldengate-session
+TryExec=/usr/bin/goldengate-session
+Type=Application
+DesktopNames=KDE
+X-KDE-PluginInfo-Version=27.0

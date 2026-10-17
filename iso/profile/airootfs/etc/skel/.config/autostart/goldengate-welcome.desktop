@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to GoldenGate OS
+Exec=/usr/bin/goldengate-welcome --autostart
+Icon=preferences-system
+Terminal=false
+X-GNOME-Autostart-enabled=true

@@ -1,0 +1,17 @@
+[Hotkey/TriggerKeys]
+0=Control+space
+1=Hangul
+2=Zenkaku_Hankaku
+
+[Hotkey/EnumerateForwardKeys]
+0=Control+Shift+space
+1=Alt+Shift+space
+
+[Behavior]
+ActiveByDefault=False
+ShareInputState=No
+PreeditEnabledByDefault=True
+ShowInputMethodInformation=True
+showInputMethodInformationWhenFocusIn=False
+CompactInputMethodInformation=True
+DefaultPageSize=7

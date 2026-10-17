@@ -1,0 +1,34 @@
+---
+componentName:   goldengate
+welcomeStyleCalamares: false
+welcomeExpandingLogo: true
+windowExpanding: normal
+windowSize: 900px,580px
+windowPlacement: center
+sidebar: widget
+navigation: widget
+
+strings:
+    productName:         "GoldenGate OS"
+    shortProductName:    "GoldenGate"
+    version:             "27.0 (Golden Gate)"
+    shortVersion:        "27.0"
+    versionedName:       "GoldenGate OS 27.0"
+    shortVersionedName:  "GoldenGate 27"
+    bootloaderEntryName: "GoldenGate OS"
+    productUrl:          "https://github.com/marcus-hendricks/GoldenGate"
+    supportUrl:          "https://github.com/marcus-hendricks/GoldenGate"
+
+images:
+    productLogo:         "logo.svg"
+    productIcon:         "logo.svg"
+    productWelcome:      "logo.svg"
+
+slideshow:               "show.qml"
+slideshowAPI:            2
+
+style:
+   SidebarBackground:        "#141824"
+   SidebarText:              "#F4F6FA"
+   SidebarTextCurrent:       "#FFFFFF"
+   SidebarBackgroundCurrent: "#0A84FF"
