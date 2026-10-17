@@ -119,7 +119,6 @@ pam
 
 # === Multilingual Input (English / Korean / Japanese) & Typography ===
 fcitx5
-fcitx5-im
 fcitx5-hangul
 fcitx5-mozc
 fcitx5-configtool
@@ -128,7 +127,7 @@ fcitx5-gtk
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
-ttf-inter
+inter-font
 ttf-jetbrains-mono
 ttf-liberation
 fontconfig
