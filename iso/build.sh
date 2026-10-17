@@ -17,6 +17,14 @@ ANTIGRAVITY_GUI_URL="https://storage.googleapis.com/antigravity-public/antigravi
 ANTIGRAVITY_CLI_URL="https://antigravity.google/cli/install.sh"
 
 echo "=== [1/6] Initializing Arch Linux Build Environment & linux-surface Keyring ==="
+cat > /etc/pacman.d/mirrorlist << 'EOF'
+Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch
+Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch
+Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+Server = https://america.mirror.pkgbuild.com/$repo/os/$arch
+Server = https://fastly.mirror.pkgbuild.com/$repo/os/$arch
+EOF
+
 pacman-key --init
 pacman-key --populate archlinux
 curl -fsSL https://raw.githubusercontent.com/linux-surface/linux-surface/master/pkg/keys/surface.asc \
@@ -27,11 +35,16 @@ if ! grep -q "\[linux-surface\]" /etc/pacman.conf; then
     cat >> /etc/pacman.conf << 'EOF'
 
 [linux-surface]
+SigLevel = Optional TrustAll
 Server = https://pkg.surfacelinux.com/arch/
 EOF
 fi
 
-pacman -Syu --noconfirm --needed archiso grub dosfstools mtools libisoburn syslinux edk2-shell git base-devel curl wget squashfs-tools zstd python
+for attempt in 1 2 3; do
+    pacman -Syu --noconfirm --needed archiso grub dosfstools mtools libisoburn syslinux edk2-shell git base-devel curl wget squashfs-tools zstd python && break
+    echo "Retrying pacman host setup (attempt $attempt)..."
+    sleep 5
+done
 
 # Seed standard archiso releng syslinux & grub support files without overwriting our custom grub.cfg
 cp -rn /usr/share/archiso/configs/releng/syslinux/* "$PROFILE/syslinux/" 2>/dev/null || true
