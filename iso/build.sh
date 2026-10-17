@@ -31,7 +31,12 @@ Server = https://pkg.surfacelinux.com/arch/
 EOF
 fi
 
-pacman -Syu --noconfirm --needed archiso git base-devel curl wget squashfs-tools zstd python
+pacman -Syu --noconfirm --needed archiso grub dosfstools mtools libisoburn syslinux edk2-shell git base-devel curl wget squashfs-tools zstd python
+
+# Seed standard archiso releng syslinux & grub support files without overwriting our custom grub.cfg
+cp -rn /usr/share/archiso/configs/releng/syslinux/* "$PROFILE/syslinux/" 2>/dev/null || true
+cp -rn /usr/share/archiso/configs/releng/grub/* "$PROFILE/grub/" 2>/dev/null || true
+cp -rn /usr/share/archiso/configs/releng/efiboot "$PROFILE/" 2>/dev/null || true
 
 echo "=== [2/6] Initializing Local Custom Package Repository ($CUSTOM_REPO) ==="
 mkdir -p "$CUSTOM_REPO"
