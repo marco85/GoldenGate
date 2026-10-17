@@ -34,7 +34,7 @@ jobs:
           docker run --rm --privileged -v "$PWD":/w -w /w archlinux:latest bash iso/build.sh
       - name: Verify ISO Image & FAT32 / 16GB USB Size Constraints
         run: |
-          python3 -m pytest -v iso/tests/test_image.py
+          python3 iso/tests/test_image.py
       - uses: actions/upload-artifact@v4
         with:
           name: goldengate-iso
