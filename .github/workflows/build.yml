@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths: ["iso/**", "tools/**", ".github/workflows/build.yml"]
 
+permissions:
+  contents: write
+
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: false
@@ -35,9 +38,17 @@ jobs:
       - name: Verify ISO Image & FAT32 / 16GB USB Size Constraints
         run: |
           python3 iso/tests/test_image.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: goldengate-iso
-          path: out/*.iso
-          retention-days: 5
-          compression-level: 0
+      - name: Publish ISO to GitHub Release (Chunked <1.9GB for GitHub Release Limit & Zero Quota)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out
+          ISO_FILE=$(ls -t *.iso | head -n 1)
+          sha256sum "$ISO_FILE" > "${ISO_FILE}.sha256"
+          split -b 1900m "$ISO_FILE" "${ISO_FILE}.part-"
+          if gh release view v27.0-latest >/dev/null 2>&1; then
+            gh release delete v27.0-latest -y --cleanup-tag || true
+          fi
+          gh release create v27.0-latest "${ISO_FILE}.sha256" "${ISO_FILE}.part-"* \
+            --title "GoldenGate OS 27.0 (macOS 27 Golden Gate for Surface Laptop 5)" \
+            --notes "Automated Arch Linux + KDE Plasma 6 Wayland + linux-surface + Antigravity v2.24.0 ISO build ($ISO_FILE)."
