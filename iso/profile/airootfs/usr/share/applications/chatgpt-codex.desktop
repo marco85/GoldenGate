@@ -2,7 +2,7 @@
 Name=Codex / ChatGPT
 Comment=OpenAI Codex & ChatGPT Workspace
 Exec=/bin/sh -c 'chromium --app="https://chatgpt.com" || google-chrome-stable --app="https://chatgpt.com" || xdg-open "https://chatgpt.com"'
-Icon=applications-development
+Icon=chatgpt-codex
 Terminal=false
 Type=Application
 Categories=Development;Utility;ArtificialIntelligence;

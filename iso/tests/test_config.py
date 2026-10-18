@@ -281,4 +281,22 @@ def test_goldengate_installer_and_power_profile():
     assert (AIROOTFS / "usr" / "share" / "wallpapers" / "GoldenGate" / "contents" / "images" / "2256x1504.svg").is_file()
     assert (AIROOTFS / "etc" / "skel" / "Desktop" / "goldengate-installer.desktop").is_file()
 
+    # Verify Breeze Dark plasma theme and high-res vector icons
+    packages = (PROFILE / "packages.x86_64").read_text(encoding="utf-8").splitlines()
+    pkg_set = {line.strip() for line in packages if line.strip() and not line.strip().startswith("#")}
+    assert "breeze" in pkg_set
+    assert "breeze-icons" in pkg_set
+
+    kdeglobals = (AIROOTFS / "etc" / "skel" / ".config" / "kdeglobals").read_text(encoding="utf-8")
+    assert "BreezeDark" in kdeglobals
+    assert "activeBackground" in kdeglobals
+
+    plasmarc = (AIROOTFS / "etc" / "skel" / ".config" / "plasmarc").read_text(encoding="utf-8")
+    assert "breeze-dark" in plasmarc
+
+    assert (AIROOTFS / "usr" / "share" / "icons" / "hicolor" / "scalable" / "apps" / "apple-logo.svg").is_file()
+    layout_js = (AIROOTFS / "usr" / "share" / "plasma" / "layout-templates" / "org.kde.plasma.desktop.goldenGateLayout" / "contents" / "layout.js").read_text(encoding="utf-8")
+    assert "apple-logo" in layout_js
+    assert "dock.lengthMode = 1" in layout_js
+
 

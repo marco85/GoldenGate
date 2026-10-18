@@ -42,6 +42,7 @@ if [ -x /usr/bin/chromium ] && [ ! -e /usr/bin/google-chrome-stable ]; then
     ln -sf /usr/bin/chromium /usr/local/bin/google-chrome-stable
 fi
 chmod +x /home/live/Desktop/*.desktop 2>/dev/null || true
+gtk-update-icon-cache -f /usr/share/icons/hicolor 2>/dev/null || true
 
 # Override KDE defaultPanel layout with GoldenGate Top Menu Bar + Bottom Floating Dock after pacstrap
 if [ -f /usr/share/plasma/layout-templates/org.kde.plasma.desktop.goldenGateLayout/contents/layout.js ]; then

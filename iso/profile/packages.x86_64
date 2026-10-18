@@ -77,6 +77,11 @@ kio-extras
 
 # === KDE Plasma 6 (Wayland) & Golden Gate Shell ===
 plasma-desktop
+breeze
+breeze-icons
+breeze-gtk
+kde-gtk-config
+plasma-integration
 kwin
 sddm
 konsole

@@ -2,7 +2,7 @@
 Name=Apple Photos
 Comment=Apple Apple Photos for GoldenGate OS
 Exec=/bin/sh -c 'google-chrome-stable --app="https://www.icloud.com/photos/" || chromium --app="https://www.icloud.com/photos/" || xdg-open "https://www.icloud.com/photos/"'
-Icon=camera-photo
+Icon=icloud-photos
 Terminal=false
 Type=Application
 Categories=Graphics;Photography;

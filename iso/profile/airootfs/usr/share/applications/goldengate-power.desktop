@@ -2,7 +2,7 @@
 Name=Battery & Performance
 Comment=Switch between All-Day Battery (7-9 hrs) and High Performance Boost
 Exec=/usr/bin/goldengate-power-profile
-Icon=battery-good
+Icon=goldengate-power
 Terminal=false
 Type=Application
 Categories=Settings;System;HardwareSettings;

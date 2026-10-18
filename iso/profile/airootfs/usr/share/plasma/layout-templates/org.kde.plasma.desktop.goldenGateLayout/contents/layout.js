@@ -17,7 +17,7 @@ topBar.lengthMode = "fill";
 
 var appleMenu = topBar.addWidget("org.kde.plasma.kickoff");
 appleMenu.currentConfigGroup = ["General"];
-appleMenu.writeConfig("icon", "start-here-kde");
+appleMenu.writeConfig("icon", "apple-logo");
 appleMenu.writeConfig("menuButtons", "0123");
 
 topBar.addWidget("org.kde.plasma.appmenu");
@@ -47,7 +47,7 @@ dock.location = "bottom";
 dock.height = 58;
 dock.floating = true;
 dock.alignment = "center";
-dock.lengthMode = "fit";
+dock.lengthMode = 1; // 1 = Fit Content in Plasma 6
 dock.hiding = "windowsgobelow";
 
 var launchpad = dock.addWidget("org.kde.plasma.kickerdash");
@@ -70,11 +70,10 @@ tasks.writeConfig("launchers", [
     "applications:org.kde.konsole.desktop",
     "applications:goldengate-liquid-glass.desktop",
     "applications:goldengate-faceid.desktop",
-    "applications:systemsettings.desktop"
+    "applications:org.kde.systemsettings.desktop"
 ]);
 tasks.writeConfig("showOnlyCurrentDesktop", false);
 tasks.writeConfig("groupingStrategy", 1);
 tasks.writeConfig("iconSpacing", 1);
 
-dock.addWidget("org.kde.plasma.marginsseparator");
 dock.addWidget("org.kde.plasma.trash");

@@ -2,7 +2,7 @@
 Name=Safari / Chrome
 Comment=macOS 27 Golden Gate Unified Web Browser
 Exec=/bin/sh -c 'google-chrome-stable %U || chromium %U'
-Icon=web-browser
+Icon=google-chrome
 Terminal=false
 Type=Application
 Categories=Network;WebBrowser;

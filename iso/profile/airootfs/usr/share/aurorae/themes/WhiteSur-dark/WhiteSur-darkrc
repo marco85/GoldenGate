@@ -19,6 +19,8 @@ BorderTop=0
 TitleAlignment=AlignHCenter
 Animation=150
 Shadow=true
+ActiveTextColor=244,246,250
+InactiveTextColor=160,165,180
 
 [Layout]
 BorderLeft=0
