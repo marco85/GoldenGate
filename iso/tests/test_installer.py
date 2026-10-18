@@ -61,7 +61,11 @@ def test_existing_system_account_rejected_before_erasure():
         installer.validate_account('daemon', 'My Name', 'password1', 'surface')
 
 
-def test_existing_system_group_rejected_before_erasure():
+def test_existing_system_group_rejected_before_erasure(monkeypatch):
+    def no_account(_):
+        raise KeyError
+    monkeypatch.setattr(installer.pwd, 'getpwnam', no_account)
+    monkeypatch.setattr(installer.grp, 'getgrnam', lambda _: SimpleNamespace(gr_name='wheel'))
     with pytest.raises(ValueError):
         installer.validate_account('wheel', 'My Name', 'password1', 'surface')
 
