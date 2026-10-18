@@ -42,3 +42,11 @@ fi
 for svc in sddm NetworkManager bluetooth avahi-daemon iptsd thermald power-profiles-daemon systemd-oomd; do
     systemctl enable "$svc" 2>/dev/null || true
 done
+
+# 6. Set root password for emergency/rescue debugging and ensure live user has no password
+echo "root:goldengate" | chpasswd
+passwd -d live >/dev/null 2>&1 || true
+
+# 7. Generate live initramfs with archiso hooks for linux-surface kernel
+mkinitcpio -P
+

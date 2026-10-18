@@ -199,3 +199,22 @@ def test_calamares_ext4_no_timemachine_and_safe_usb_flasher():
     flash_sh = (ROOT / "tools" / "flash-usb.sh").read_text(encoding="utf-8")
     assert "SANDISK USB" in flash_sh
     assert "LIMIT=64000000000" in flash_sh
+
+
+def test_archiso_mkinitcpio_live_hooks():
+    archiso_conf = (AIROOTFS / "etc" / "mkinitcpio.conf.d" / "archiso.conf").read_text(encoding="utf-8")
+    assert "archiso" in archiso_conf
+    assert "archiso_loop_mnt" in archiso_conf
+
+    mkinit_conf = (AIROOTFS / "etc" / "mkinitcpio.conf").read_text(encoding="utf-8")
+    assert "archiso" in mkinit_conf
+    assert "surface_aggregator" in mkinit_conf
+
+    preset = (AIROOTFS / "etc" / "mkinitcpio.d" / "linux-surface.preset").read_text(encoding="utf-8")
+    assert "/boot/vmlinuz-linux-surface" in preset
+    assert "/boot/initramfs-linux-surface.img" in preset
+
+    customize = (AIROOTFS / "root" / "customize_airootfs.sh").read_text(encoding="utf-8")
+    assert "mkinitcpio -P" in customize
+    assert "root:goldengate" in customize
+

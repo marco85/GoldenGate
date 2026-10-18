@@ -51,6 +51,13 @@ cp -rn /usr/share/archiso/configs/releng/syslinux/* "$PROFILE/syslinux/" 2>/dev/
 cp -rn /usr/share/archiso/configs/releng/grub/* "$PROFILE/grub/" 2>/dev/null || true
 cp -rn /usr/share/archiso/configs/releng/efiboot "$PROFILE/" 2>/dev/null || true
 
+# Ensure mkinitcpio archiso directories exist
+mkdir -p "$PROFILE/airootfs/etc/mkinitcpio.conf.d" "$PROFILE/airootfs/etc/mkinitcpio.d"
+if [ ! -f "$PROFILE/airootfs/etc/mkinitcpio.conf.d/archiso.conf" ] && [ -f /usr/share/archiso/configs/releng/airootfs/etc/mkinitcpio.conf.d/archiso.conf ]; then
+    cp /usr/share/archiso/configs/releng/airootfs/etc/mkinitcpio.conf.d/archiso.conf "$PROFILE/airootfs/etc/mkinitcpio.conf.d/archiso.conf"
+fi
+
+
 echo "=== [2/6] Initializing Local Custom Package Repository ($CUSTOM_REPO) ==="
 mkdir -p "$CUSTOM_REPO"
 repo-add "$CUSTOM_REPO/goldengate-custom.db.tar.gz"

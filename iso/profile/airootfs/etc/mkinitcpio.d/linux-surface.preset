@@ -1,0 +1,7 @@
+# mkinitcpio preset for GoldenGate OS live environment (Surface Laptop 5)
+ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux-surface"
+
+PRESETS=('default')
+
+default_image="/boot/initramfs-linux-surface.img"
