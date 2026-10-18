@@ -32,7 +32,7 @@ with tempfile.TemporaryDirectory(prefix='goldengate-boot-') as temp:
             vm.expect(r'[#] ')
             import base64
             qml_data = base64.b64encode(b"import QtQuick\nimport PearDock\nItem { Backend {} }").decode()
-            qml_check = f"import base64; from PyQt6.QtGui import QGuiApplication; from PyQt6.QtQml import QQmlEngine, QQmlComponent; from PyQt6.QtCore import QUrl; a=QGuiApplication([]); e=QQmlEngine(); c=QQmlComponent(e); c.setData(base64.b64decode('{qml_data}'),QUrl()); o=c.create(); print('DOCK_QML_VALID' if o else str(c.errors()))"
+            qml_check = f"import base64; from PyQt6.QtGui import QGuiApplication; from PyQt6.QtQml import QQmlEngine, QQmlComponent; from PyQt6.QtCore import QUrl; a=QGuiApplication([]); e=QQmlEngine(); c=QQmlComponent(e); c.setData(base64.b64decode('{qml_data}'),QUrl()); o=c.create(); print('DOCK_QML_VALID' if o else [err.toString() for err in c.errors()])"
             encoded = base64.b64encode(qml_check.encode()).decode()
             vm.sendline(f'QT_QPA_PLATFORM=offscreen python -c "import base64; exec(base64.b64decode(\'{encoded}\'))"')
             vm.expect(r'\r\nDOCK_QML_VALID\r\n', timeout=60)

@@ -94,7 +94,7 @@
  # 6. Instalación
  # -------------------------------------------------
 -install(TARGETS wavetask DESTINATION ${KDE_INSTALL_QMLDIR}/PearDock)
-+set_target_properties(wavetaskplugin PROPERTIES INSTALL_RPATH "$ORIGIN")
++set_target_properties(wavetaskplugin PROPERTIES PREFIX "lib" INSTALL_RPATH "$ORIGIN")
 +install(TARGETS wavetask wavetaskplugin DESTINATION ${KDE_INSTALL_QMLDIR}/PearDock)
  install(FILES
      ${CMAKE_CURRENT_BINARY_DIR}/qmldir
