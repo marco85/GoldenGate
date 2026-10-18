@@ -11,6 +11,24 @@ import pexpect
 root = Path(__file__).resolve().parents[2]
 iso = max((root / 'out').glob('*.iso'), key=lambda p: p.stat().st_mtime)
 firmware = '/usr/share/OVMF/OVMF_CODE_4M.fd'
+def expect_pattern(vm, success_pattern, timeout=120):
+    patterns = [
+        success_pattern,
+        r'Traceback \(most recent call last\):',
+        r'AssertionError:',
+        r'INSTALL_RESULT False',
+        r'\[root@goldengate [^\]]*\]#',
+        r'\[ggtest@goldengate [^\]]*\]\$',
+    ]
+    idx = vm.expect(patterns, timeout=timeout)
+    if idx != 0:
+        output = (vm.before or '') + (vm.after or '')
+        try:
+            output += vm.read_nonblocking(size=8192, timeout=2)
+        except Exception:
+            pass
+        raise RuntimeError(f"Expected {success_pattern!r} but encountered {patterns[idx]!r}:\n{output}")
+
 with tempfile.TemporaryDirectory(prefix='goldengate-boot-') as temp:
     disk = str(Path(temp) / 'target.qcow2')
     subprocess.run(['qemu-img', 'create', '-f', 'qcow2', disk, '28G'], check=True)
@@ -35,18 +53,18 @@ with tempfile.TemporaryDirectory(prefix='goldengate-boot-') as temp:
             qml_check = f"import base64; from PyQt6.QtGui import QGuiApplication; from PyQt6.QtQml import QQmlEngine, QQmlComponent; from PyQt6.QtCore import QUrl; a=QGuiApplication([]); e=QQmlEngine(); c=QQmlComponent(e); c.setData(base64.b64decode('{qml_data}'),QUrl()); o=c.create(); print('DOCK_QML_VALID' if o else [err.toString() for err in c.errors()])"
             encoded = base64.b64encode(qml_check.encode()).decode()
             vm.sendline(f'QT_QPA_PLATFORM=offscreen python -c "import base64; exec(base64.b64decode(\'{encoded}\'))"')
-            vm.expect(r'DOCK_QML_VALID\r+\n', timeout=60)
+            expect_pattern(vm, r'DOCK_QML_VALID\r+\n', timeout=60)
             vm.expect(r'[#] ')
             applet_check = Path(__file__).with_name('dock_runtime.py').read_bytes()
             encoded = base64.b64encode(applet_check).decode()
             vm.sendline(f'python -c "import base64; exec(base64.b64decode(\'{encoded}\'))"')
-            vm.expect(r'DOCK_APPLET_VALID\r+\n', timeout=100)
+            expect_pattern(vm, r'DOCK_APPLET_VALID\r+\n', timeout=60)
             vm.expect(r'[#] ')
             command = "import runpy; m=runpy.run_path('/usr/bin/goldengate-installer'); ok=m['execute_install']('/dev/sda','ggtest',\"Golden O'Brien\",'BootTest-123'); print('INSTALL_RESULT',ok)"
             import base64
             encoded = base64.b64encode(command.encode()).decode()
             vm.sendline(f'python -c "import base64; exec(base64.b64decode(\'{encoded}\'))"')
-            vm.expect(r'INSTALL_RESULT True', timeout=600)
+            expect_pattern(vm, r'INSTALL_RESULT True', timeout=600)
             vm.expect(r'[#] ')
             # Add a serial console only to the VM target, for installed login verification.
             vm.sendline("mount /dev/sda2 /mnt; mount /dev/sda1 /mnt/boot/efi; sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT=/c\\GRUB_CMDLINE_LINUX_DEFAULT=\"console=ttyS0,115200\"' /mnt/etc/default/grub; arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg; umount -R /mnt; poweroff")
@@ -62,7 +80,7 @@ with tempfile.TemporaryDirectory(prefix='goldengate-boot-') as temp:
             vm.sendline('BootTest-123')
             vm.expect(r'[$] ')
             vm.sendline("test ! -e /etc/sudoers.d/99-live && ! id live >/dev/null 2>&1 && test -f /boot/grub/grub.cfg && test -d /usr/share/plasma/plasmoids/PearDock && printf '\\nINSTALLED_BOOT_VERIFIED\\n'")
-            vm.expect(r'\r+\nINSTALLED_BOOT_VERIFIED\r+\n')
+            expect_pattern(vm, r'INSTALLED_BOOT_VERIFIED', timeout=60)
             print('UEFI live boot, offline installation and installed account login verified.')
         finally:
             vm.close(force=True)

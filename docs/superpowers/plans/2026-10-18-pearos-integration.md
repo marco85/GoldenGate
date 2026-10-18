@@ -14,10 +14,10 @@ Review focus: no detected disks; external drives; apostrophes/newlines in names/
 
 ## Execution ledger
 
-- Image source commit: `b666e9b`. Full build: GitHub Actions `39153050337`; corrected serial-console verification reuses exactly matching image sources.
-- Configuration/installer/sharing suite: 33 checks pass on Linux; local suite also checks an existing image size (34 total).
+- Image source commit: `b666e9b`. Full build: GitHub Actions `39153050337`; corrected serial-console verification in GitHub Actions `39154624714` reuses exactly matching image sources.
+- Configuration/installer/sharing suite: 38 checks pass locally without image sizing; full local suite including image sizing passes 39 checks.
 - Original ISO boot tested locally under QEMU. Discovered and corrected terminal firstboot prompt, incomplete Aurorae decoration, live welcome overlay, unset wallpaper and dock compatibility defects.
 - Disposable VM proved compiled backend readiness (`DOCK_QML_VALID`) and complete applet construction (`GOLDENGATE_DOCK_READY`) after the plugin prefix, obsolete preview and Qt style fixes. Final image still needs fresh CI verification.
-- Independent review found no remaining concrete source blocker.
+- Independent review found no remaining concrete source blocker. USB helper checks now reject missing/incorrect checksums, wrong-target and duplicate manifest records; a valid release reaches the harmless test writer.
 - USB is external removable USB 2.0 FD, disk5, 16,079,781,888 bytes. Archive disk4 (250 GB SANDISK USB) is protected. Recheck identity before writing. Administrator access must be obtained through the native macOS prompt; never ask for a password in chat.
 - No current-image USB write has occurred yet. Complete boot/install/installed-login gate, download and checksum verification, then flash and compare readback hash.
