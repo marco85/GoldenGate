@@ -54,7 +54,14 @@ if [ "${1:-}" = "--download" ] || [ -z "$LATEST_ISO" ]; then
         ISO_NAME=$(basename "$SHA_FILE" .sha256)
         echo "Reassembling $ISO_NAME and verifying SHA-256 checksum..."
         cat "$download_dir/${ISO_NAME}".part-* > "$download_dir/$ISO_NAME"
-        (cd "$download_dir" && shasum -a 256 -c "$(basename "$SHA_FILE")")
+        # Bind the single digest to the complete ISO, never to a downloaded chunk.
+        if ! awk -v filename="$ISO_NAME" 'NR != 1 || NF != 2 || length($1) != 64 || $1 ~ /[^0-9a-fA-F]/ || $2 != filename { bad=1 } END { exit bad || NR != 1 }' "$SHA_FILE"; then
+            echo "Error: Invalid ISO checksum record; nothing will be written." >&2
+            exit 2
+        fi
+        expected=$(awk '{ print tolower($1) }' "$SHA_FILE")
+        actual=$(shasum -a 256 "$download_dir/$ISO_NAME" | cut -d' ' -f1)
+        [ "$actual" = "$expected" ] || { echo "Error: ISO checksum mismatch; nothing will be written." >&2; exit 2; }
         mv "$download_dir/$ISO_NAME" "out/$ISO_NAME"
         mv "$SHA_FILE" "out/${ISO_NAME}.sha256"
         LATEST_ISO="out/$ISO_NAME"

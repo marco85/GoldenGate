@@ -11,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 
 
-@pytest.mark.parametrize('release', ['missing-checksum', 'wrong-checksum', 'valid'])
+@pytest.mark.parametrize('release', ['missing-checksum', 'wrong-checksum', 'wrong-target', 'extra-record', 'valid'])
 def test_download_requires_verified_release_before_writer(tmp_path, release):
     (tmp_path / 'tools').mkdir()
     (tmp_path / 'out').mkdir()
@@ -22,15 +22,22 @@ def test_download_requires_verified_release_before_writer(tmp_path, release):
     writer = tmp_path / 'tools/flash-usb.sh'
     writer.write_text('cp "$1" writer-received.iso\n')
     gh = tmp_path / 'bin/gh'
-    checksum = hashlib.sha256(b'new image').hexdigest() if release == 'valid' else '0' * 64
+    checksum = hashlib.sha256(b'new image').hexdigest() if release in ('valid', 'wrong-target', 'extra-record') else '0' * 64
+    manifest = f'{checksum}  new.iso\n'
+    if release == 'wrong-target':
+        manifest = f'{checksum}  new.iso.part-aa\n'
+    if release == 'extra-record':
+        manifest += manifest
     gh.write_text(f'''#!{sys.executable}
 import sys
 from pathlib import Path
 if sys.argv[1:3] == ['release', 'download']:
     folder = Path(sys.argv[sys.argv.index('-D') + 1])
     (folder / 'new.iso.part-aa').write_bytes(b'new image')
+    if {release!r} == 'wrong-target':
+        (folder / 'new.iso.part-ab').write_bytes(b'unverified bytes')
     if {release!r} != 'missing-checksum':
-        (folder / 'new.iso.sha256').write_text('{checksum}  new.iso\\n')
+        (folder / 'new.iso.sha256').write_text({manifest!r})
 ''')
     gh.chmod(0o755)
     result = subprocess.run(['sh', 'tools/make-boot-usb.sh', '--download'], cwd=tmp_path,
