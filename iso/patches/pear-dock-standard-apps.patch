@@ -1,19 +1,30 @@
 --- a/package/contents/ui/main.qml
 +++ b/package/contents/ui/main.qml
-@@ -866,10 +866,10 @@
+@@ -23,7 +23,6 @@
+ 
+ import "code/LayoutMetrics.js" as LayoutMetrics
+ import "code/TaskTools.js" as TaskTools
+-import "integrations" as DockIntegrations
+ 
+ PlasmoidItem {
+     id: tasks
+@@ -866,11 +865,11 @@
                  readonly property real _baseSize: Plasmoid.configuration.iconSize
                  readonly property real _sigma: _baseSize * Plasmoid.configuration.amplitud
  
 -                property Item pearFinderItem: pearFinder
+-                property Item pearLauncherItem: pearLauncher
 +                property Item pearFinderItem: null
-                 property Item pearLauncherItem: pearLauncher
++                property Item pearLauncherItem: null
                  property Item pearSeparatorItem: dockSeparator
 -                property Item pearFolderArcItem: pearFolderArc
+-                property Item pearTrashItem: pearTrash
 +                property Item pearFolderArcItem: null
-                 property Item pearTrashItem: pearTrash
++                property Item pearTrashItem: null
  
                  readonly property int dockLauncherCount: (pearFinderItem ? 1 : 0) + (pearLauncherItem ? 1 : 0)
-@@ -1050,18 +1050,13 @@
+                 readonly property int afterTasksCount: (pearFolderArcItem ? 1 : 0) + (pearTrashItem ? 1 : 0)
+@@ -1050,19 +1049,9 @@
                      }
                  }
  
@@ -23,18 +34,20 @@
 -                    dockRef: taskList
 -                    dockIndex: 0
 -                }
+-
+-                DockIntegrations.PearLauncher {
+-                    id: pearLauncher
+-                    tasksRoot: tasks
+-                    dockRef: taskList
+-                    dockIndex: 1
+-                }
++
++
 +
  
-                 DockIntegrations.PearLauncher {
-                     id: pearLauncher
-                     tasksRoot: tasks
-                     dockRef: taskList
--                    dockIndex: 1
-+                    dockIndex: 0
-                 }
- 
                  Repeater {
-@@ -1165,18 +1160,13 @@
+                     id: taskRepeater
+@@ -1165,19 +1154,9 @@
                      }
                  }
  
@@ -44,14 +57,45 @@
 -                    dockRef: taskList
 -                    dockIndex: taskList.dockLauncherCount + taskRepeater.count
 -                }
-+
- 
-                 DockIntegrations.PearTrash {
-                     id: pearTrash
-                     tasksRoot: tasks
-                     dockRef: taskList
+-
+-                DockIntegrations.PearTrash {
+-                    id: pearTrash
+-                    tasksRoot: tasks
+-                    dockRef: taskList
 -                    dockIndex: taskList.dockLauncherCount + taskRepeater.count + 1
-+                    dockIndex: taskList.dockLauncherCount + taskRepeater.count
-                 }
+-                }
++
++
++
              }
          }
+ 
+--- a/plugin/CMakeLists.txt
++++ b/plugin/CMakeLists.txt
+@@ -33,7 +33,6 @@
+ # 3. Fuentes (Incluyendo plugin.cpp manual)
+ # -------------------------------------------------
+ set(wavetask_source
+-    plugin.cpp
+     backend.cpp
+     backend.h
+     smartlauncherbackend.cpp
+@@ -79,7 +78,7 @@
+ # 5. Propiedades y Enlaces (Linker)
+ # -------------------------------------------------
+ set_target_properties(wavetask PROPERTIES
+-    OUTPUT_NAME "wavetaskplugin"
++    OUTPUT_NAME "wavetask"
+     PREFIX "lib"
+ )
+ 
+@@ -104,7 +103,8 @@
+ # -------------------------------------------------
+ # 6. Instalación
+ # -------------------------------------------------
+-install(TARGETS wavetask DESTINATION ${KDE_INSTALL_QMLDIR}/PearDock)
++set_target_properties(wavetaskplugin PROPERTIES INSTALL_RPATH "$ORIGIN")
++install(TARGETS wavetask wavetaskplugin DESTINATION ${KDE_INSTALL_QMLDIR}/PearDock)
+ install(FILES
+     ${CMAKE_CURRENT_BINARY_DIR}/qmldir
+     ${CMAKE_CURRENT_BINARY_DIR}/wavetask.qmltypes

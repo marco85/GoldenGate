@@ -52,11 +52,9 @@ dock.hiding = "windowsgobelow";
 
 var usePearDock = typeof knownWidgetTypes !== "undefined" && knownWidgetTypes.indexOf("PearDock") !== -1;
 
-if (!usePearDock) {
 var launchpad = dock.addWidget("org.kde.plasma.kickerdash");
 launchpad.currentConfigGroup = ["General"];
 launchpad.writeConfig("icon", "applications-all");
-}
 
 var tasks = dock.addWidget(usePearDock ? "PearDock" : "org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
@@ -73,7 +71,7 @@ tasks.writeConfig("showOnlyCurrentDesktop", false);
 tasks.writeConfig("groupingStrategy", 1);
 tasks.writeConfig("iconSpacing", 1);
 
-if (!usePearDock) dock.addWidget("org.kde.plasma.trash");
+dock.addWidget("org.kde.plasma.trash");
 
 if (usePearDock) {
     tasks.writeConfig("skinName", "Tahoe Dark");
