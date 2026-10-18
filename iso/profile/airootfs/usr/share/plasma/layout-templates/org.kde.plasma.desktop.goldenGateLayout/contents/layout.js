@@ -81,3 +81,12 @@ if (usePearDock) {
     tasks.writeConfig("launcherIcon", "applications-all");
     tasks.writeConfig("skinLiquidGelEffect", false);
 }
+
+// Apply the bundled wallpaper through the Plasma scripting API.
+var screens = desktops();
+for (var screenIndex = 0; screenIndex < screens.length; screenIndex++) {
+    var desktop = screens[screenIndex];
+    desktop.wallpaperPlugin = "org.kde.image";
+    desktop.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
+    desktop.writeConfig("Image", "file:///usr/share/wallpapers/GoldenGate/contents/images/2256x1504.svg");
+}

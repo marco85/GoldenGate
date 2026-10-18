@@ -10,6 +10,10 @@ sed -i 's/^#\(ja_JP\.UTF-8\)/\1/' /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 echo "goldengate" > /etc/hostname
+ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
+printf 'KEYMAP=us\n' > /etc/vconsole.conf
+# A live image is preconfigured; do not block boot on terminal setup questions.
+systemctl mask systemd-firstboot.service
 
 # 2. Create the live session user ("live") with full Golden Gate skel & groups
 if ! id -u live >/dev/null 2>&1; then
