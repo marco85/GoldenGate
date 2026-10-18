@@ -43,6 +43,13 @@ if [ -x /usr/bin/chromium ] && [ ! -e /usr/bin/google-chrome-stable ]; then
 fi
 chmod +x /home/live/Desktop/*.desktop 2>/dev/null || true
 
+# Override KDE defaultPanel layout with GoldenGate Top Menu Bar + Bottom Floating Dock after pacstrap
+if [ -f /usr/share/plasma/layout-templates/org.kde.plasma.desktop.goldenGateLayout/contents/layout.js ]; then
+    mkdir -p /usr/share/plasma/layout-templates/org.kde.plasma.desktop.defaultPanel/contents
+    cp -f /usr/share/plasma/layout-templates/org.kde.plasma.desktop.goldenGateLayout/contents/layout.js \
+          /usr/share/plasma/layout-templates/org.kde.plasma.desktop.defaultPanel/contents/layout.js
+fi
+
 # 5. Clean up build-time-only [goldengate-custom] local repo from /etc/pacman.conf so pacman works after boot
 if [ -f /etc/pacman.conf ]; then
     sed -i '/^\[goldengate-custom\]/,+2d' /etc/pacman.conf
