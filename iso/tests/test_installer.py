@@ -94,3 +94,10 @@ def test_internal_pci_topology_allowed(tmp_path):
     root.mkdir()
     (root / 'nvme0n1').symlink_to(device)
     assert installer.internal_topology('nvme0n1', root) is True
+
+
+def test_direct_launch_elevates_before_showing_account_form(monkeypatch):
+    monkeypatch.setattr(installer.os, 'geteuid', lambda: 1000)
+    monkeypatch.setattr(installer, 'run_gui', lambda: pytest.fail('Form must open only after elevation'))
+    monkeypatch.setattr(installer.subprocess, 'run', lambda *a, **k: SimpleNamespace(returncode=7))
+    assert installer.main([]) == 7

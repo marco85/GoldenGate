@@ -544,6 +544,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         print(json.dumps(build_install_plan(args.dry_run, args.user, args.user.capitalize()), indent=2))
         return 0
+    # Elevate before collecting account details so the desktop shortcut never resets a filled form.
+    if os.geteuid() != 0:
+        return subprocess.run(["sudo", "-E", sys.executable, __file__], check=False).returncode
     return run_gui()
 
 
