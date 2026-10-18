@@ -77,8 +77,9 @@ jobs:
             gh release delete v27.0-latest -y --cleanup-tag || true
           fi
           gh release create v27.0-latest "${ISO_FILE}.sha256" "${ISO_FILE}.part-"* \
-            --title "GoldenGate OS 27.0 (macOS 27 Golden Gate for Surface Laptop 5)" \
-            --notes "Automated Arch Linux + KDE Plasma 6 Wayland + linux-surface + Antigravity v2.24.0 ISO build ($ISO_FILE)."
+            --target "$GITHUB_SHA" \
+            --title "GoldenGate OS 27.0 for Surface Laptop 5" \
+            --notes "Arch Linux, KDE Plasma, linux-surface and Pear Dock. UEFI live boot, offline installation and installed-account login verified in QEMU. Physical Surface hardware requires live testing. Validation source: $GITHUB_SHA. Image: $ISO_FILE."
           rm -f "${ISO_FILE}.part-"*
       - uses: actions/upload-artifact@v4
         if: always()
