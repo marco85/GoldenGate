@@ -53,3 +53,13 @@ def test_rejected_target_never_invokes_partition_tools(monkeypatch):
     monkeypatch.setattr(installer.subprocess, 'run', lambda *a, **k: calls.append(a))
     assert installer.execute_install('/dev/nvme0n1', 'sarah', 'Sarah', 'password1') is False
     assert calls == []
+
+
+def test_existing_system_account_rejected_before_erasure():
+    with pytest.raises(ValueError):
+        installer.validate_account('daemon', 'My Name', 'password1', 'surface')
+
+
+def test_existing_system_group_rejected_before_erasure():
+    with pytest.raises(ValueError):
+        installer.validate_account('wheel', 'My Name', 'password1', 'surface')

@@ -10,6 +10,8 @@ Installs GoldenGate OS from the live USB onto the Surface Laptop 5 NVMe SSD (/de
 """
 from __future__ import annotations
 import argparse
+import pwd
+import grp
 import json
 import os
 import re
@@ -96,6 +98,12 @@ def list_installable_disks() -> list[dict]:
 def validate_account(username: str, full_name: str, password: str, hostname: str) -> None:
     if not re.fullmatch(r"[a-z][a-z0-9_-]{0,30}", username) or username in ("root", "live"):
         raise ValueError("Choose a username beginning with a letter; root and live are reserved.")
+    for lookup in (pwd.getpwnam, grp.getgrnam):
+        try:
+            lookup(username)
+        except KeyError:
+            continue
+        raise ValueError("That username is reserved by the system. Choose another name.")
     if not full_name.strip() or any(c in full_name for c in "\n\r\x00:"):
         raise ValueError("Enter a full name without colons or line breaks.")
     if len(password) < 8 or any(c in password for c in "\n\r\x00"):
