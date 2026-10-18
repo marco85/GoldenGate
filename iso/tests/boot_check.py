@@ -17,8 +17,6 @@ def expect_pattern(vm, success_pattern, timeout=120):
         r'Traceback \(most recent call last\):',
         r'AssertionError:',
         r'INSTALL_RESULT False',
-        r'\[root@goldengate [^\]]*\]#',
-        r'\[ggtest@goldengate [^\]]*\]\$',
     ]
     idx = vm.expect(patterns, timeout=timeout)
     if idx != 0:
@@ -28,6 +26,7 @@ def expect_pattern(vm, success_pattern, timeout=120):
         except Exception:
             pass
         raise RuntimeError(f"Expected {success_pattern!r} but encountered {patterns[idx]!r}:\n{output}")
+
 
 with tempfile.TemporaryDirectory(prefix='goldengate-boot-') as temp:
     disk = str(Path(temp) / 'target.qcow2')
