@@ -20,7 +20,7 @@ jobs:
       - name: Run Configuration & Subsystem Tests
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq python3-pytest python3-yaml
-          python3 -m pytest -v iso/tests/test_config.py
+          python3 -m pytest -v iso/tests/test_config.py iso/tests/test_installer.py
 
   iso:
     needs: verify-config
@@ -39,6 +39,13 @@ jobs:
       - name: Verify ISO Image & FAT32 / 16GB USB Size Constraints
         run: |
           python3 iso/tests/test_image.py
+      - name: Verify UEFI boot and offline installation
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-x86 ovmf python3-pexpect squashfs-tools xorriso
+          sudo chmod 666 /dev/kvm
+          python3 iso/tests/verify_contents.py
+          python3 iso/tests/boot_test.py
       - name: Publish ISO to GitHub Release (Chunked <1.9GB for GitHub Release Limit & Zero Quota)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,6 +66,8 @@ jobs:
         continue-on-error: true
         with:
           name: goldengate-iso
-          path: out/*.iso
+          path: |
+            out/*.iso
+            out/boot-test.log
           retention-days: 5
           compression-level: 0

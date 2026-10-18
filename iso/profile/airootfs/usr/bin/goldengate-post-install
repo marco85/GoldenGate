@@ -26,11 +26,17 @@ if [ -x /usr/bin/goldengate-faceid-setup ]; then
     /usr/bin/goldengate-faceid-setup --configure >/dev/null 2>&1 || true
 fi
 
+# Installed systems must generate unique machine and SSH identities.
+rm -f /etc/machine-id /var/lib/dbus/machine-id /etc/ssh/ssh_host_*key*
+touch /etc/machine-id
+rm -f /root/customize_airootfs.sh
+
 # 5. Remove live-session-only autologin, live checklist autostart, and live installer Desktop shortcut
 rm -f /etc/sddm.conf.d/20-live-autologin.conf
 rm -f /etc/xdg/autostart/goldengate-live-checklist.desktop
 rm -f /etc/skel/Desktop/goldengate-installer.desktop
 rm -f /home/*/Desktop/goldengate-installer.desktop 2>/dev/null || true
 rm -f /etc/sudoers.d/99-live
+rm -f /etc/skel/Desktop/goldengate-live-checklist.desktop
 
 exit 0

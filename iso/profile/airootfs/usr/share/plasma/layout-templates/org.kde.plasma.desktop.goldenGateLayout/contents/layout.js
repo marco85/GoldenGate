@@ -10,7 +10,7 @@ for (var i = 0; i < existingPanels.length; i++) {
 
 var topBar = new Panel("org.kde.panel");
 topBar.location = "top";
-topBar.height = 28;
+topBar.height = 32;
 topBar.floating = false;
 topBar.alignment = "center";
 topBar.lengthMode = "fill";
@@ -54,26 +54,29 @@ var launchpad = dock.addWidget("org.kde.plasma.kickerdash");
 launchpad.currentConfigGroup = ["General"];
 launchpad.writeConfig("icon", "applications-all");
 
-var tasks = dock.addWidget("org.kde.plasma.icontasks");
+var usePearDock = typeof knownWidgetTypes !== "undefined" && knownWidgetTypes.indexOf("PearDock") !== -1;
+var tasks = dock.addWidget(usePearDock ? "PearDock" : "org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", [
     "applications:org.kde.dolphin.desktop",
-    "applications:google-chrome.desktop",
-    "applications:antigravity.desktop",
-    "applications:claude-desktop.desktop",
-    "applications:chatgpt-codex.desktop",
-    "applications:icloud-drive.desktop",
-    "applications:icloud-photos.desktop",
-    "applications:goldengate-airdrop.desktop",
-    "applications:goldengate-toolbox.desktop",
+    "applications:chromium.desktop",
     "applications:libreoffice-writer.desktop",
+    "applications:org.kde.gwenview.desktop",
+    "applications:goldengate-airdrop.desktop",
     "applications:org.kde.konsole.desktop",
-    "applications:goldengate-liquid-glass.desktop",
-    "applications:goldengate-faceid.desktop",
-    "applications:org.kde.systemsettings.desktop"
+    "applications:systemsettings.desktop"
 ]);
 tasks.writeConfig("showOnlyCurrentDesktop", false);
 tasks.writeConfig("groupingStrategy", 1);
 tasks.writeConfig("iconSpacing", 1);
 
 dock.addWidget("org.kde.plasma.trash");
+
+if (usePearDock) {
+    tasks.writeConfig("skinName", "Tahoe Dark");
+    tasks.writeConfig("iconSize", 44);
+    tasks.writeConfig("magnification", 40.0);
+    tasks.writeConfig("showReflection", false);
+    tasks.writeConfig("launcherIcon", "applications-all");
+    tasks.writeConfig("skinLiquidGelEffect", false);
+}

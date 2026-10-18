@@ -202,6 +202,9 @@ def run_gui() -> int:
     face_desc.setWordWrap(True)
     l_face.addWidget(face_desc)
     enroll_btn = QPushButton("Scan Your Face Now…")
+    enroll_btn.setEnabled(bool(shutil.which("howdy") and shutil.which("linux-enable-ir-emitter")))
+    if not enroll_btn.isEnabled():
+        enroll_btn.setText("Face unlock unavailable — use your password")
     enroll_btn.clicked.connect(
         lambda: subprocess.Popen(["pkexec", "/usr/bin/goldengate-faceid-setup", "--configure", "--enroll"])
     )

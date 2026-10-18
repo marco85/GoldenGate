@@ -38,8 +38,12 @@ def get_live_boot_device() -> str:
         )
         src = res.stdout.strip()
         if src:
-            base = Path(src).name
-            return re.sub(r"p?\d+$", "", base)
+            parent = subprocess.run(
+                ["lsblk", "-n", "-o", "PKNAME", src], capture_output=True, text=True, check=True,
+            ).stdout.strip()
+            if parent:
+                return parent.splitlines()[0]
+            return Path(src).name
     except Exception:
         pass
     return ""
@@ -48,18 +52,22 @@ def get_live_boot_device() -> str:
 def list_installable_disks() -> list[dict]:
     live_dev = get_live_boot_device()
     disks = []
+    if not live_dev:
+        return disks
     if shutil.which("lsblk"):
         try:
             res = subprocess.run(
-                ["lsblk", "-J", "-b", "-d", "-o", "NAME,SIZE,MODEL,TRAN,RM,TYPE"],
+                ["lsblk", "-J", "-b", "-d", "-o", "NAME,SIZE,MODEL,TRAN,RM,RO,TYPE"],
                 capture_output=True,
                 text=True,
                 check=False,
             )
+            if res.returncode != 0:
+                return []
             data = json.loads(res.stdout)
             for blk in data.get("blockdevices", []):
                 name = blk.get("name", "")
-                if blk.get("type") != "disk":
+                if blk.get("type") != "disk" or blk.get("rm") or blk.get("ro") or blk.get("tran") not in ("nvme", "sata", "ata"):
                     continue
                 if name.startswith(("loop", "zram", "ram", "sr")):
                     continue
@@ -82,17 +90,32 @@ def list_installable_disks() -> list[dict]:
                 )
         except Exception:
             pass
-    if not disks:
-        disks.append(
-            {
-                "device": "/dev/nvme0n1",
-                "name": "nvme0n1",
-                "size_gb": 256.0,
-                "model": "Microsoft Surface NVMe SSD",
-                "removable": False,
-            }
-        )
     return disks
+
+
+def validate_account(username: str, full_name: str, password: str, hostname: str) -> None:
+    if not re.fullmatch(r"[a-z][a-z0-9_-]{0,30}", username) or username in ("root", "live"):
+        raise ValueError("Choose a username beginning with a letter; root and live are reserved.")
+    if not full_name.strip() or any(c in full_name for c in "\n\r\x00:"):
+        raise ValueError("Enter a full name without colons or line breaks.")
+    if len(password) < 8 or any(c in password for c in "\n\r\x00"):
+        raise ValueError("Use a password of at least 8 characters without line breaks.")
+    if not re.fullmatch(r"[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?", hostname):
+        raise ValueError("Computer name must contain only letters, numbers and hyphens (1–63 characters).")
+
+
+def preflight(disk_dev: str, username: str, full_name: str, password: str, hostname: str) -> None:
+    validate_account(username, full_name, password, hostname)
+    if disk_dev not in {d["device"] for d in list_installable_disks()}:
+        raise ValueError("The selected disk is not a verified writable internal drive. Rescan before installing.")
+    if not Path("/sys/firmware/efi").is_dir():
+        raise ValueError("Restart the USB in UEFI mode before installing.")
+    for tool in ("sgdisk", "parted", "mkfs.fat", "mkfs.ext4", "unsquashfs", "arch-chroot", "genfstab", "udevadm"):
+        if not shutil.which(tool):
+            raise ValueError(f"Required installation tool is missing: {tool}")
+    for payload in ("arch/x86_64/airootfs.sfs", "arch/boot/x86_64/vmlinuz-linux-surface"):
+        if not (Path("/run/archiso/bootmnt") / payload).is_file():
+            raise ValueError(f"The USB system image is incomplete: {payload}")
 
 
 def partition_paths_for_disk(disk_dev: str) -> tuple[str, str]:
@@ -155,10 +178,12 @@ def execute_install(
     efi_part, root_part = partition_paths_for_disk(disk_dev)
     target = Path("/mnt/goldengate-install")
 
+    mounted = False
     try:
+        preflight(disk_dev, username, full_name, password, hostname)
         log(f"[1/8] Partitioning {disk_dev} (512 MiB EFI + ext4 Root)…")
         subprocess.run(["umount", "-R", str(target)], check=False)
-        subprocess.run(["sgdisk", "--zap-all", disk_dev], check=False)
+        subprocess.run(["sgdisk", "--zap-all", disk_dev], check=True)
         subprocess.run(["parted", "-s", disk_dev, "mklabel", "gpt"], check=True)
         subprocess.run(["parted", "-s", disk_dev, "mkpart", "ESP", "fat32", "1MiB", "513MiB"], check=True)
         subprocess.run(["parted", "-s", disk_dev, "set", "1", "esp", "on"], check=True)
@@ -172,6 +197,7 @@ def execute_install(
         log(f"[3/8] Mounting target filesystems at {target}…")
         target.mkdir(parents=True, exist_ok=True)
         subprocess.run(["mount", root_part, str(target)], check=True)
+        mounted = True
         (target / "boot" / "efi").mkdir(parents=True, exist_ok=True)
         subprocess.run(["mount", efi_part, str(target / "boot" / "efi")], check=True)
 
@@ -193,22 +219,16 @@ def execute_install(
         (target / "etc" / "mkinitcpio.conf").write_text(INSTALLED_MKINITCPIO_CONF, encoding="utf-8")
         (target / "etc" / "hostname").write_text(f"{hostname}\n", encoding="utf-8")
 
-        # Create target user inside chroot
-        subprocess.run(
-            [
-                "arch-chroot",
-                str(target),
-                "/bin/bash",
-                "-c",
-                f"id -u {username} >/dev/null 2>&1 || useradd -m -c '{full_name}' -G wheel,video,audio,input,uucp,storage,network,power -s /bin/bash {username}; "
-                f"cp -rn /etc/skel/. /home/{username}/ 2>/dev/null || true; "
-                f"chown -R {username}:{username} /home/{username}; "
-                f"userdel -r live 2>/dev/null || true; "
-                f"rm -f /etc/sudoers.d/99-live",
-            ],
-            check=True,
-        )
-        chpasswd_input = f"{username}:{password}\nroot:{password}\n"
+        # Pass all account data as argument values, never as shell source.
+        for command in (
+            ["useradd", "-m", "-c", full_name, "-G", "wheel,video,audio,input,uucp,storage,network,power", "-s", "/bin/bash", username],
+            ["cp", "-rn", "/etc/skel/.", f"/home/{username}/"],
+            ["chown", "-R", f"{username}:{username}", f"/home/{username}"],
+        ):
+            subprocess.run(["arch-chroot", str(target), *command], check=True)
+        subprocess.run(["arch-chroot", str(target), "userdel", "-r", "live"], check=True)
+        subprocess.run(["arch-chroot", str(target), "passwd", "-l", "root"], check=True)
+        chpasswd_input = f"{username}:{password}\n"
         subprocess.run(
             ["arch-chroot", str(target), "chpasswd"],
             input=chpasswd_input,
@@ -251,16 +271,20 @@ def execute_install(
                 "--removable",
                 "--recheck",
             ],
-            check=False,
+            check=True,
         )
         subprocess.run(["arch-chroot", str(target), "grub-mkconfig", "-o", "/boot/grub/grub.cfg"], check=True)
         subprocess.run(["sync"], check=False)
-        subprocess.run(["umount", "-R", str(target)], check=False)
+        subprocess.run(["umount", "-R", str(target)], check=True)
+        mounted = False
         log("✅ GoldenGate OS installation complete! Remove the USB stick and click Restart.")
         return True
     except Exception as exc:
         log(f"❌ Installation error: {exc}")
         return False
+    finally:
+        if mounted:
+            subprocess.run(["umount", "-R", str(target)], check=False)
 
 
 def run_gui() -> int:
@@ -288,7 +312,8 @@ def run_gui() -> int:
     app = QApplication(sys.argv)
     win = QWidget()
     win.setWindowTitle("Install GoldenGate OS 27.0 — Surface Laptop 5")
-    win.setFixedSize(680, 520)
+    win.resize(760, 680)
+    win.setMinimumSize(640, 600)
     win.setStyleSheet("""
         QWidget {
             background-color: rgba(20, 22, 32, 245);
@@ -321,7 +346,7 @@ def run_gui() -> int:
     layout.setContentsMargins(26, 22, 26, 22)
     layout.setSpacing(10)
 
-    title = QLabel("💿 Install macOS 27 Golden Gate to Surface SSD")
+    title = QLabel("Install GoldenGate OS")
     title.setFont(QFont("Inter", 16, QFont.Weight.Bold))
     layout.addWidget(title)
 
@@ -330,6 +355,11 @@ def run_gui() -> int:
     for d in disks:
         disk_combo.addItem(f"{d['device']} — {d['model']} ({d['size_gb']} GB)", d["device"])
     layout.addWidget(disk_combo)
+    if not disks:
+        layout.addWidget(QLabel("No safe internal drive detected. Close the installer and check the drive before retrying."))
+    summary = QLabel("Offline installation • Internal drive only • Keep the laptop plugged into power")
+    summary.setWordWrap(True)
+    layout.addWidget(summary)
 
     row_user = QHBoxLayout()
     fullname_edit = QLineEdit()
@@ -343,15 +373,21 @@ def run_gui() -> int:
     row_pass = QHBoxLayout()
     pass_edit = QLineEdit()
     pass_edit.setEchoMode(QLineEdit.EchoMode.Password)
-    pass_edit.setPlaceholderText("Password (min 4 chars)")
+    pass_edit.setPlaceholderText("Password (at least 8 characters)")
     hostname_edit = QLineEdit("Surface-GoldenGate")
     hostname_edit.setPlaceholderText("Computer Name")
     row_pass.addWidget(pass_edit)
     row_pass.addWidget(hostname_edit)
     layout.addLayout(row_pass)
+    confirm_edit = QLineEdit()
+    confirm_edit.setEchoMode(QLineEdit.EchoMode.Password)
+    confirm_edit.setPlaceholderText("Confirm password")
+    layout.addWidget(confirm_edit)
+    erase_cb = QCheckBox("I have backed up my files. Erase the selected internal drive, including Windows.")
+    layout.addWidget(erase_cb)
 
-    autologin_cb = QCheckBox("Log in automatically on startup (Face ID still protects lock screen & sudo)")
-    autologin_cb.setChecked(True)
+    autologin_cb = QCheckBox("Log in automatically on startup (optional)")
+    autologin_cb.setChecked(False)
     layout.addWidget(autologin_cb)
 
     log_box = QPlainTextEdit()
@@ -397,33 +433,64 @@ def run_gui() -> int:
             subprocess.Popen(["sudo", "-E", sys.executable, __file__])
             win.close()
             return
-        d_dev = disk_combo.currentData() or "/dev/nvme0n1"
-        u_name = re.sub(r"[^a-z0-9_-]", "", (username_edit.text() or "user").strip().lower()) or "user"
+        d_dev = disk_combo.currentData()
+        u_name = username_edit.text().strip()
         f_name = (fullname_edit.text() or u_name.capitalize()).strip()
-        pw = pass_edit.text() or "goldengate"
+        pw = pass_edit.text()
         h_name = (hostname_edit.text() or "Surface-GoldenGate").strip()
+
+        try:
+            validate_account(u_name, f_name, pw, h_name)
+            if pw != confirm_edit.text():
+                raise ValueError("Passwords do not match.")
+            if not erase_cb.isChecked():
+                raise ValueError("Back up your files, then acknowledge that this erases the entire selected drive.")
+            preflight(d_dev, u_name, f_name, pw, h_name)
+        except ValueError as exc:
+            QMessageBox.warning(win, "Before you install", str(exc))
+            return
 
         reply = QMessageBox.question(
             win,
             "Confirm Erase & Install",
-            f"All data on {d_dev} will be erased and replaced with GoldenGate OS (ext4).\n\nContinue?",
+            f"All data on {disk_combo.currentText()} will be erased, including Windows.\n\nAccount: {u_name}\nComputer: {h_name}\n\nInstall GoldenGate OS now?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:
             return
 
         install_btn.setEnabled(False)
+        for control in (disk_combo, fullname_edit, username_edit, pass_edit, confirm_edit, hostname_edit, autologin_cb, erase_cb):
+            control.setEnabled(False)
         worker = InstallWorker(d_dev, u_name, f_name, pw, h_name, autologin_cb.isChecked())
         win._worker = worker  # keep reference
         worker.progress.connect(log_box.appendPlainText)
-        worker.finished_ok.connect(lambda ok: reboot_btn.setVisible(ok))
+        def on_finished(ok):
+            reboot_btn.setVisible(ok)
+            if not ok:
+                install_btn.setEnabled(True)
+                for control in (disk_combo, fullname_edit, username_edit, pass_edit, confirm_edit, hostname_edit, autologin_cb, erase_cb):
+                    control.setEnabled(True)
+                QMessageBox.warning(win, "Installation stopped", "See the log above. Keep the USB connected; you can correct the issue and retry.")
+        worker.finished_ok.connect(on_finished)
         worker.start()
 
+    install_btn.setEnabled(bool(disks))
     install_btn.clicked.connect(on_start_install)
     btn_row.addStretch()
     btn_row.addWidget(reboot_btn)
     btn_row.addWidget(install_btn)
     layout.addLayout(btn_row)
 
+    def close_event(event):
+        worker = getattr(win, "_worker", None)
+        if worker is not None and worker.isRunning():
+            QMessageBox.information(win, "Installation in progress", "Wait for installation to finish before closing this window.")
+            event.ignore()
+        else:
+            event.accept()
+    win.closeEvent = close_event
     win.show()
     return app.exec()
 

@@ -162,3 +162,13 @@ python-gobject
 gtk3
 gtk4
 libadwaita
+
+# Pear Dock runtime and functional system settings
+systemsettings
+aurorae
+qt6-tools
+plasma-workspace
+plasma-activities-stats
+libksysguard
+kbookmarks
+knotifications

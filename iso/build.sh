@@ -85,6 +85,8 @@ python3 "$PROFILE/airootfs/usr/bin/goldengate-liquid-glass" \
     --apply-default \
     --root "$PROFILE/airootfs/etc/skel"
 
+bash "$TOP/iso/build-pear-dock.sh" "$PROFILE"
+
 echo "=== [5/6] Configuring Live User (live) & SDDM Live Autologin ==="
 mkdir -p "$PROFILE/airootfs/etc/sddm.conf.d"
 cat > "$PROFILE/airootfs/etc/sddm.conf.d/20-live-autologin.conf" << 'EOF'

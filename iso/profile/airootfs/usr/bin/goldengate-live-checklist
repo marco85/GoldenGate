@@ -28,7 +28,7 @@ def run_hardware_checks() -> dict:
     mem_sleep = (
         Path("/sys/power/mem_sleep").read_text(encoding="utf-8", errors="ignore").strip()
         if Path("/sys/power/mem_sleep").exists()
-        else "s2idle"
+        else "unknown"
     )
     return {
         "kernel": uname,
@@ -61,7 +61,7 @@ def run_gui() -> int:
     app = QApplication(sys.argv)
     win = QWidget()
     win.setWindowTitle("Surface Laptop 5 Live Hardware Checklist — GoldenGate OS")
-    win.setFixedSize(620, 440)
+    win.resize(720, 520)
     win.setStyleSheet("""
         QWidget {
             background-color: rgba(24, 26, 36, 240);
@@ -88,12 +88,12 @@ def run_gui() -> int:
     layout.addWidget(title)
 
     items = [
-        ("Keyboard & Hybrid Ctrl / Alt (⌘ Command) Copy-Paste", True),
+        ("Keyboard & Hybrid Ctrl / Alt (⌘ Command) Copy-Paste", False),
         ("Two-Finger Trackpad Scroll Dampening (ScrollFactor=0.35, NaturalScroll)", checks["scroll_dampened_035"]),
-        ("3 & 4-Finger Gestures (Mission Control, Spaces, Launchpad Pinch)", True),
-        ("10-Point PixelSense Touchscreen & Surface Pen (iptsd)", True),
-        (f"Front RGB & IR Camera Nodes ({', '.join(checks['video_devices']) or '/dev/video0, /dev/video2'})", bool(checks["video_devices"])),
-        ("Wi-Fi, Bluetooth, Speakers & Brightness Keys", True),
+        ("3 & 4-Finger Gestures (Mission Control, Spaces, Launchpad Pinch)", False),
+        ("10-Point PixelSense Touchscreen & Surface Pen (iptsd)", False),
+        (f"Front RGB & IR Camera Nodes ({', '.join(checks['video_devices']) or 'none detected'})", bool(checks["video_devices"])),
+        ("Wi-Fi, Bluetooth, Speakers & Brightness Keys", False),
         (f"Modern Standby Deep Sleep ({checks['s2idle_supported'] and 's2idle ready'})", checks["s2idle_supported"]),
     ]
 
@@ -102,6 +102,9 @@ def run_gui() -> int:
         cb.setChecked(prechecked)
         layout.addWidget(cb)
 
+    note = QLabel("Test each item yourself and tick it only after it works. Detection alone does not verify hardware.\nInstallation erases the selected internal drive; back up Windows files first.")
+    note.setWordWrap(True)
+    layout.addWidget(note)
     layout.addStretch()
     btn_row = QHBoxLayout()
     install_btn = QPushButton("💿 Install GoldenGate OS to Surface SSD…")
