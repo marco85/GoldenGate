@@ -37,4 +37,5 @@ file_permissions=(
   ["/usr/bin/goldengate-toolbox"]="0:0:755"
   ["/usr/bin/goldengate-installer"]="0:0:755"
   ["/usr/bin/goldengate-power-profile"]="0:0:755"
+  ["/usr/bin/goldengate-trackpad-setup"]="0:0:755"
 )

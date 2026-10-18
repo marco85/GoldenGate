@@ -21,7 +21,13 @@ if [ ! -f "$HOME/.config/goldengate-initialized" ]; then
     chmod +x "$HOME/Desktop/"*.desktop 2>/dev/null || true
     /usr/bin/goldengate-liquid-glass --apply-default >/dev/null 2>&1 || true
     /usr/bin/goldengate-power-profile --apply-default >/dev/null 2>&1 || true
+    /usr/bin/goldengate-trackpad-setup >/dev/null 2>&1 || true
     touch "$HOME/.config/goldengate-initialized"
+fi
+
+# Apply macOS Natural Scrolling & 0.35 Scroll Dampening live on Wayland startup
+if [ -x /usr/bin/goldengate-trackpad-setup ]; then
+    (sleep 3 && /usr/bin/goldengate-trackpad-setup >/dev/null 2>&1) &
 fi
 
 # Play macOS 27 Golden Gate boot chime asynchronously

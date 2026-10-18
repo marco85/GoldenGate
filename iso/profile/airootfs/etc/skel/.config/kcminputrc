@@ -4,10 +4,11 @@ RepeatDelay=250
 RepeatRate=35
 
 [Mouse]
+NaturalScroll=true
 XLbInptAccelProfileFlat=false
-XLbInptNaturalScroll=false
+XLbInptNaturalScroll=true
 cursorSize=24
-cursorTheme=WhiteSur-cursors
+cursorTheme=breeze_cursors
 
 [Libinput][Touchpad]
 NaturalScroll=true
