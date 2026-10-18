@@ -30,7 +30,7 @@ with tempfile.TemporaryDirectory(prefix='goldengate-boot-') as temp:
             vm.expect('Password:')
             vm.sendline('goldengate')
             vm.expect(r'[#] ')
-            qml_check = "from PyQt6.QtGui import QGuiApplication; from PyQt6.QtQml import QQmlEngine, QQmlComponent; from PyQt6.QtCore import QUrl; a=QGuiApplication([]); e=QQmlEngine(); c=QQmlComponent(e); c.setData(b'import QtQuick\\nimport PearDock\\nItem { Backend {} }',QUrl()); o=c.create(); print('DOCK_QML_VALID' if o else str(c.errors()))"
+            qml_check = "from PyQt6.QtGui import QGuiApplication; from PyQt6.QtQml import QQmlEngine, QQmlComponent; from PyQt6.QtCore import QUrl; a=QGuiApplication([]); e=QQmlEngine(); c=QQmlComponent(e); c.setData(b'import QtQuick\nimport PearDock\nItem { Backend {} }',QUrl()); o=c.create(); print('DOCK_QML_VALID' if o else str(c.errors()))"
             import base64
             encoded = base64.b64encode(qml_check.encode()).decode()
             vm.sendline(f'QT_QPA_PLATFORM=offscreen python -c "import base64; exec(base64.b64decode(\'{encoded}\'))"')
