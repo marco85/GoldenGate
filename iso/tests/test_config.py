@@ -174,6 +174,26 @@ def test_surface_ir_camera_faceid_and_pam():
     sddm_qml = (AIROOTFS / "usr" / "share" / "sddm" / "themes" / "goldengate" / "Main.qml").read_text(encoding="utf-8")
     assert "userModel.data(userModel.index(0, 0), Qt.UserRole + 1)" in sddm_qml
     assert "onLoginFailed" in sddm_qml
+    assert "faceIdState" in sddm_qml
+    assert "shackle" in sddm_qml
+    assert "shakeAnimation" in sddm_qml
+    assert "30D158" in sddm_qml
+
+
+def test_iphone_and_macos_sound_suite():
+    packages = (PROFILE / "packages.x86_64").read_text(encoding="utf-8").splitlines()
+    pkg_set = {line.strip() for line in packages if line.strip() and not line.strip().startswith("#")}
+    for ipkg in ("usbmuxd", "libimobiledevice", "ifuse", "gvfs-afc", "kio-extras", "pv"):
+        assert ipkg in pkg_set, f"Missing iPhone/system package: {ipkg}"
+
+    sounds_dir = AIROOTFS / "usr" / "share" / "sounds" / "goldengate"
+    for s in ("boot-chime.wav", "faceid-unlock.wav", "airdrop.wav", "screenshot.wav", "trash.wav", "volume-pop.wav", "power-plug.wav"):
+        assert (sounds_dir / s).is_file(), f"Missing macOS sound effect: {s}"
+
+    places = (AIROOTFS / "etc" / "skel" / ".local" / "share" / "user-places.xbel").read_text(encoding="utf-8")
+    assert "iCloud Drive" in places
+    assert (AIROOTFS / "usr" / "share" / "applications" / "icloud-drive.desktop").is_file()
+
 
 
 def test_antigravity_and_cfc_toolbox_integration():

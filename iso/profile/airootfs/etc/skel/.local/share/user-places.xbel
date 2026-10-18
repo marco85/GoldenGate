@@ -25,6 +25,14 @@
    </metadata>
   </info>
  </bookmark>
+ <bookmark href="file:///usr/share/applications/icloud-drive.desktop">
+  <title>iCloud Drive</title>
+  <info>
+   <metadata owner="http://freedesktop.org">
+    <bookmark:icon name="folder-cloud"/>
+   </metadata>
+  </info>
+ </bookmark>
  <bookmark href="Desktop">
   <title>Desktop</title>
   <info>

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=iCloud Drive
+Comment=Apple iCloud Drive for GoldenGate OS
+Exec=/bin/sh -c 'google-chrome-stable --app="https://www.icloud.com/iclouddrive/" || chromium --app="https://www.icloud.com/iclouddrive/" || xdg-open "https://www.icloud.com/iclouddrive/"'
+Icon=folder-cloud
+Terminal=false
+Type=Application
+Categories=Network;FileTransfer;Office;
+StartupWMClass=crx_https_www.icloud.com_iclouddrive_

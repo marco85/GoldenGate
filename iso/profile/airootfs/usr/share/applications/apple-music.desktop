@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Apple Music
+Comment=Apple Apple Music for GoldenGate OS
+Exec=/bin/sh -c 'google-chrome-stable --app="https://music.apple.com/" || chromium --app="https://music.apple.com/" || xdg-open "https://music.apple.com/"'
+Icon=audio-x-generic
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Player;
+StartupWMClass=crx_https_music.apple.com_

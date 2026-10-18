@@ -1,0 +1,11 @@
+[Unit]
+Description=GoldenGate macOS Boot Chime
+After=pipewire.service wireplumber.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'if [ -f /usr/share/sounds/goldengate/boot-chime.wav ] && command -v pw-play >/dev/null; then pw-play /usr/share/sounds/goldengate/boot-chime.wav; fi'
+RemainAfterExit=no
+
+[Install]
+WantedBy=default.target

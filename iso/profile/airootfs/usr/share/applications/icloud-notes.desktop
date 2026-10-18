@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Apple Notes
+Comment=Apple Apple Notes for GoldenGate OS
+Exec=/bin/sh -c 'google-chrome-stable --app="https://www.icloud.com/notes/" || chromium --app="https://www.icloud.com/notes/" || xdg-open "https://www.icloud.com/notes/"'
+Icon=accessories-text-editor
+Terminal=false
+Type=Application
+Categories=Office;Utility;
+StartupWMClass=crx_https_www.icloud.com_notes_

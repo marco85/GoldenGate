@@ -39,7 +39,7 @@ elif [ -x /opt/antigravity/Antigravity ]; then
 fi
 
 # 5. Enable core system & Surface Laptop 5 services
-for svc in sddm NetworkManager bluetooth avahi-daemon iptsd thermald power-profiles-daemon systemd-oomd; do
+for svc in sddm NetworkManager bluetooth avahi-daemon usbmuxd iptsd thermald power-profiles-daemon systemd-oomd; do
     systemctl enable "$svc" 2>/dev/null || true
 done
 
