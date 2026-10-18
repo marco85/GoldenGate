@@ -51,6 +51,28 @@ def get_live_boot_device() -> str:
     return ""
 
 
+def internal_topology(name: str, sysroot: Path = Path("/sys/class/block")) -> bool:
+    """Reject USB/Thunderbolt/external-facing PCI ancestry; unknown devices fail closed."""
+    node = sysroot / name
+    if not node.exists():
+        return False
+    device = node.resolve()
+    if not any(parent.name.startswith("pci") for parent in device.parents):
+        return False
+    for parent in (device, *device.parents):
+        if "thunderbolt" in parent.name.lower() or parent.name.startswith("usb"):
+            return False
+        for attr, forbidden in (("external_facing", {"1"}), ("removable", {"removable", "1"})):
+            flag = parent / attr
+            if flag.is_file():
+                try:
+                    if flag.read_text().strip() in forbidden:
+                        return False
+                except OSError:
+                    return False
+    return True
+
+
 def list_installable_disks() -> list[dict]:
     live_dev = get_live_boot_device()
     disks = []
@@ -74,6 +96,8 @@ def list_installable_disks() -> list[dict]:
                 if name.startswith(("loop", "zram", "ram", "sr")):
                     continue
                 if live_dev and name == live_dev:
+                    continue
+                if not internal_topology(name):
                     continue
                 size_bytes = int(blk.get("size") or 0)
                 if size_bytes < 20_000_000_000:
@@ -116,6 +140,9 @@ def preflight(disk_dev: str, username: str, full_name: str, password: str, hostn
     validate_account(username, full_name, password, hostname)
     if disk_dev not in {d["device"] for d in list_installable_disks()}:
         raise ValueError("The selected disk is not a verified writable internal drive. Rescan before installing.")
+    mounts = subprocess.run(["lsblk", "-nr", "-o", "MOUNTPOINTS", disk_dev], capture_output=True, text=True, check=True)
+    if mounts.stdout.strip():
+        raise ValueError("A partition on this drive is mounted or in use. Close files and unmount it before installing.")
     if not Path("/sys/firmware/efi").is_dir():
         raise ValueError("Restart the USB in UEFI mode before installing.")
     for tool in ("sgdisk", "parted", "mkfs.fat", "mkfs.ext4", "unsquashfs", "arch-chroot", "genfstab", "udevadm"):

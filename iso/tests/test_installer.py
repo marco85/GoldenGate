@@ -15,6 +15,7 @@ loader.exec_module(installer)
 
 def disks(monkeypatch, entries, live='sdb'):
     monkeypatch.setattr(installer, 'get_live_boot_device', lambda: live)
+    monkeypatch.setattr(installer, 'internal_topology', lambda _: True)
     monkeypatch.setattr(installer.shutil, 'which', lambda _: '/usr/bin/lsblk')
     monkeypatch.setattr(installer.subprocess, 'run', lambda *a, **k: SimpleNamespace(returncode=0, stdout=json.dumps({'blockdevices': entries})))
     return installer.list_installable_disks()
@@ -63,3 +64,29 @@ def test_existing_system_account_rejected_before_erasure():
 def test_existing_system_group_rejected_before_erasure():
     with pytest.raises(ValueError):
         installer.validate_account('wheel', 'My Name', 'password1', 'surface')
+
+
+def test_external_pci_topology_is_rejected(tmp_path):
+    pci = tmp_path / 'devices/pci0000:00/0000:00:07.0'
+    device = pci / '0000:01:00.0/nvme/nvme0/nvme0n1'
+    device.mkdir(parents=True)
+    (pci / 'external_facing').write_text('1\n')
+    root = tmp_path / 'block'
+    root.mkdir()
+    (root / 'nvme0n1').symlink_to(device)
+    assert installer.internal_topology('nvme0n1', root) is False
+
+
+def test_unknown_topology_rejected(tmp_path):
+    assert installer.internal_topology('nvme0n1', tmp_path) is False
+
+
+def test_internal_pci_topology_allowed(tmp_path):
+    pci = tmp_path / 'devices/pci0000:00/0000:00:1d.0'
+    device = pci / '0000:01:00.0/nvme/nvme0/nvme0n1'
+    device.mkdir(parents=True)
+    (pci / 'external_facing').write_text('0\n')
+    root = tmp_path / 'block'
+    root.mkdir()
+    (root / 'nvme0n1').symlink_to(device)
+    assert installer.internal_topology('nvme0n1', root) is True

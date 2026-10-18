@@ -14,7 +14,11 @@ firmware = '/usr/share/OVMF/OVMF_CODE_4M.fd'
 with tempfile.TemporaryDirectory(prefix='goldengate-boot-') as temp:
     disk = str(Path(temp) / 'target.qcow2')
     subprocess.run(['qemu-img', 'create', '-f', 'qcow2', disk, '28G'], check=True)
-    base = ['qemu-system-x86_64', '-enable-kvm', '-m', '4096', '-smp', '2', '-bios', firmware,
+    nvram = str(Path(temp) / 'OVMF_VARS.fd')
+    import shutil
+    shutil.copyfile('/usr/share/OVMF/OVMF_VARS_4M.fd', nvram)
+    base = ['qemu-system-x86_64', '-enable-kvm', '-m', '4096', '-smp', '2', '-drive', f'if=pflash,format=raw,readonly=on,file={firmware}',
+            '-drive', f'if=pflash,format=raw,file={nvram}',
             '-display', 'none', '-serial', 'stdio', '-monitor', 'none', '-no-reboot',
             '-drive', f'file={disk},format=qcow2,if=ide', '-net', 'none']
     with (root / 'out/boot-test.log').open('w') as log:
