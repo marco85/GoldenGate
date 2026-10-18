@@ -18,4 +18,5 @@ elif command -v kdeconnectd >/dev/null 2>&1; then
     kdeconnectd >/dev/null 2>&1 &
 fi
 
-exec /usr/bin/goldengate-airdrop --serve-headless
+# Browser sharing runs only while its window is open, after explicit opt-in.
+exit 0

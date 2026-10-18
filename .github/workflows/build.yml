@@ -20,7 +20,7 @@ jobs:
       - name: Run Configuration & Subsystem Tests
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq python3-pytest python3-yaml
-          python3 -m pytest -v iso/tests/test_config.py iso/tests/test_installer.py
+          python3 -m pytest -v iso/tests/test_config.py iso/tests/test_installer.py iso/tests/test_sharing.py
 
   iso:
     needs: verify-config
