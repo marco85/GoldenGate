@@ -195,6 +195,17 @@ def test_iphone_and_macos_sound_suite():
     assert (AIROOTFS / "usr" / "share" / "applications" / "icloud-drive.desktop").is_file()
 
 
+def test_grub_and_syslinux_initrd():
+    grub_cfg = (PROFILE / "grub" / "grub.cfg").read_text(encoding="utf-8")
+    assert "intel-ucode.img" not in grub_cfg
+    assert "initramfs-linux-surface.img" in grub_cfg
+
+    syslinux_cfg = (PROFILE / "syslinux" / "syslinux.cfg").read_text(encoding="utf-8")
+    assert "intel-ucode.img" not in syslinux_cfg
+    assert "initramfs-linux-surface.img" in syslinux_cfg
+
+
+
 
 def test_antigravity_and_cfc_toolbox_integration():
     build_sh = (ROOT / "iso" / "build.sh").read_text(encoding="utf-8")
