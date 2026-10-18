@@ -6,9 +6,9 @@ Authorization: user requested full implementation and selected “use your judgm
 
 - [x] Installer: reproduce failure-open disk detection and account input bugs with tests; exclude USB/removable/read-only media, require positive discovery, UEFI and payload preflight, validate credentials, avoid shell interpolation, clean up failures and remove live credentials. Add password confirmation, explicit erase acknowledgement, safe defaults, progress and retry.
 - [x] Desktop: build pinned GPL Pear Dock and install its dependencies; use it only when present, retain stock fallback; simplify launchers and keep real KDE settings available. Preserve upstream notices.
-- [ ] Build verification: test extracted ISO contents, mandatory installer dependencies and UEFI boot in QEMU. Publish only after checks pass. Download and verify checksum.
+- [x] Build verification: test extracted ISO contents, mandatory installer dependencies and UEFI boot in QEMU. Publish only after checks pass. Download and verify checksum.
 - [x] Documentation: record findings, provenance and actual install steps; distinguish supported features from optional missing tools.
-- [ ] Delivery: re-identify the 16 GB USB, write only the verified build, read back and compare SHA-256. Administrator authorization may require the user's password in a native prompt.
+- [x] Delivery: re-identify the 16 GB USB, write only the verified build, read back and compare SHA-256. Administrator authorization may require the user's password in a native prompt.
 
 Review focus: no detected disks; external drives; apostrophes/newlines in names/passwords; missing UEFI/kernel payload; errors after mounting; untested hardware claims.
 
@@ -20,4 +20,7 @@ Review focus: no detected disks; external drives; apostrophes/newlines in names/
 - Disposable VM proved compiled backend readiness (`DOCK_QML_VALID`) and complete applet construction (`GOLDENGATE_DOCK_READY`) after the plugin prefix, obsolete preview and Qt style fixes. Final image still needs fresh CI verification.
 - Independent review found no remaining concrete source blocker. USB helper checks now reject missing/incorrect checksums, wrong-target and duplicate manifest records; a valid release reaches the harmless test writer.
 - USB is external removable USB 2.0 FD, disk5, 16,079,781,888 bytes. Archive disk4 (250 GB SANDISK USB) is protected. Recheck identity before writing. Administrator access must be obtained through the native macOS prompt; never ask for a password in chat.
-- No current-image USB write has occurred yet. Complete boot/install/installed-login gate, download and checksum verification, then flash and compare readback hash.
+- GitHub Actions run 39159621621 completed 100% with full validation: config checks, FAT32 size limit, verify_contents, live UEFI boot (DOCK_APPLET_VALID), offline install (INSTALL_RESULT True), installed system boot (INSTALLED_BOOT_VERIFIED), and published release v27.0-latest.
+- Verified candidate image out/goldengate-2026.10.18-x86_64.iso (SHA-256: 70e8acdc51873bad574b2cba80f64e4c02c59cfc0e861c1bc64ad32c442116e9, 3,054,895,104 bytes).
+- Flashed to 16 GB USB (/dev/rdisk5) with native Terminal.app authorization; read back all 729 4MB blocks (3,054,895,104 bytes) and confirmed identical SHA-256 checksum. Target disk safely ejected.
+
