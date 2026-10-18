@@ -47,7 +47,7 @@ dock.location = "bottom";
 dock.height = 58;
 dock.floating = true;
 dock.alignment = "center";
-dock.lengthMode = 1; // 1 = Fit Content in Plasma 6
+dock.lengthMode = "fit"; // Plasma scripting API uses string length modes
 dock.hiding = "windowsgobelow";
 
 var usePearDock = typeof knownWidgetTypes !== "undefined" && knownWidgetTypes.indexOf("PearDock") !== -1;

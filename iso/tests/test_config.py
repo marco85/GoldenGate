@@ -297,6 +297,6 @@ def test_goldengate_installer_and_power_profile():
     assert (AIROOTFS / "usr" / "share" / "icons" / "hicolor" / "scalable" / "apps" / "apple-logo.svg").is_file()
     layout_js = (AIROOTFS / "usr" / "share" / "plasma" / "layout-templates" / "org.kde.plasma.desktop.goldenGateLayout" / "contents" / "layout.js").read_text(encoding="utf-8")
     assert "apple-logo" in layout_js
-    assert "dock.lengthMode = 1" in layout_js
+    assert 'dock.lengthMode = "fit"' in layout_js
 
 
