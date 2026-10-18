@@ -45,7 +45,7 @@ jobs:
           sudo apt-get install -y -qq qemu-system-x86 ovmf python3-pexpect squashfs-tools xorriso
           sudo chmod 666 /dev/kvm
           python3 iso/tests/verify_contents.py
-          python3 iso/tests/boot_test.py
+          python3 iso/tests/boot_check.py
       - name: Publish ISO to GitHub Release (Chunked <1.9GB for GitHub Release Limit & Zero Quota)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
