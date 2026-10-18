@@ -37,6 +37,11 @@ with tempfile.TemporaryDirectory(prefix='goldengate-boot-') as temp:
             vm.sendline(f'QT_QPA_PLATFORM=offscreen python -c "import base64; exec(base64.b64decode(\'{encoded}\'))"')
             vm.expect(r'\r\nDOCK_QML_VALID\r\n', timeout=60)
             vm.expect(r'[#] ')
+            applet_check = Path(__file__).with_name('dock_runtime.py').read_bytes()
+            encoded = base64.b64encode(applet_check).decode()
+            vm.sendline(f'python -c "import base64; exec(base64.b64decode(\'{encoded}\'))"')
+            vm.expect(r'\r\nDOCK_APPLET_VALID\r\n', timeout=100)
+            vm.expect(r'[#] ')
             command = "import runpy; m=runpy.run_path('/usr/bin/goldengate-installer'); ok=m['execute_install']('/dev/sda','ggtest',\"Golden O'Brien\",'BootTest-123'); print('INSTALL_RESULT',ok)"
             import base64
             encoded = base64.b64encode(command.encode()).decode()

@@ -99,3 +99,22 @@
  install(FILES
      ${CMAKE_CURRENT_BINARY_DIR}/qmldir
      ${CMAKE_CURRENT_BINARY_DIR}/wavetask.qmltypes
+--- a/package/contents/ui/ToolTipInstance.qml
++++ b/package/contents/ui/ToolTipInstance.qml
+@@ -253,15 +253,7 @@
+             // shadow can cover up the highlight
+             anchors.margins: Kirigami.Units.smallSpacing * 2
+ 
+-            sourceComponent: root.isMinimized || pipeWireLoader.active ? iconItem : x11Thumbnail
+-
+-            Component {
+-                id: x11Thumbnail
+-
+-                PlasmaCore.WindowThumbnail {
+-                    winId: thumbnailSourceItem.winId
+-                }
+-            }
++            sourceComponent: iconItem
+ 
+             // when minimized, we don't have a preview on X11, so show the icon
+             Component {

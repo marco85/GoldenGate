@@ -5,7 +5,8 @@
 set -e
 
 export GTK_THEME="WhiteSur-Dark"
-export QT_STYLE_OVERRIDE="kvantum"
+unset QT_STYLE_OVERRIDE
+export QT_QUICK_CONTROLS_STYLE="org.kde.desktop"
 export XDG_CURRENT_DESKTOP="KDE"
 export KDE_SESSION_VERSION="6"
 export LIBVA_DRIVER_NAME="iHD"

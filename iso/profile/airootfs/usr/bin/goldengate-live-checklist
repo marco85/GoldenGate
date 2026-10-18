@@ -69,6 +69,7 @@ def run_gui() -> int:
             font-family: 'Inter', sans-serif;
             border-radius: 10px;
         }
+        QLabel, QCheckBox { background: transparent; }
         QPushButton {
             background-color: #0A84FF;
             color: white;
@@ -99,7 +100,7 @@ def run_gui() -> int:
 
     for label, prechecked in items:
         cb = QCheckBox(label)
-        cb.setChecked(prechecked)
+        cb.setChecked(False)
         layout.addWidget(cb)
 
     note = QLabel("Test each item yourself and tick it only after it works. Detection alone does not verify hardware.\nInstallation erases the selected internal drive; back up Windows files first.")

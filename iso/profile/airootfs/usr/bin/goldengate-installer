@@ -363,6 +363,7 @@ def run_gui() -> int:
             padding: 7px 12px;
             color: #FFFFFF;
         }
+        QLabel, QCheckBox { background: transparent; }
         QPushButton {
             background-color: #0A84FF;
             color: white;

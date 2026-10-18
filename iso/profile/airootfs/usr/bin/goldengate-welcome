@@ -126,6 +126,7 @@ def run_gui() -> int:
         QStackedWidget, QWidget#page {
             background-color: transparent;
         }
+        QLabel { background: transparent; }
         QPushButton {
             background-color: #0A84FF;
             color: #FFFFFF;
@@ -240,8 +241,8 @@ def run_gui() -> int:
     t4.setFont(QFont("Inter", 16, QFont.Weight.Bold))
     l_airdrop.addWidget(t4)
     airdrop_desc = QLabel(
-        "AirDrop is active in the background via LocalSend, Zero-App Safari QR Bridge, and KDE Connect.\n"
-        "You can right-click any file in Finder and choose 'Share via AirDrop…' or drop files onto the AirDrop icon in the Dock."
+        "KDE Connect supports sharing with paired devices. LocalSend is optional.\n"
+        "Browser sharing starts off. Open the sharing helper and enable Everyone only on trusted Wi-Fi; close it when finished."
     )
     airdrop_desc.setWordWrap(True)
     l_airdrop.addWidget(airdrop_desc)
@@ -254,24 +255,24 @@ def run_gui() -> int:
     # Page 5: AI Workspace & Finish
     p_apps = QWidget()
     l_apps = QVBoxLayout(p_apps)
-    t5 = QLabel("🚀 Ready to Use — Antigravity, Claude & Codex")
+    t5 = QLabel("Your everyday apps are ready")
     t5.setFont(QFont("Inter", 16, QFont.Weight.Bold))
     l_apps.addWidget(t5)
     apps_desc = QLabel(
-        "• Antigravity App (v2.24.0) & Antigravity CLI (v1.4.0) are installed and pinned to your Dock.\n"
-        "• Press Ctrl+Space (or Alt+Space) to switch between English, 한국어, and 日本語.\n"
-        "• Both Ctrl and Alt (next to Spacebar) work as ⌘ Command for Copy/Paste across all apps."
+        "Chromium and LibreOffice are installed. AI services need an internet connection and your own account.\n"
+        "Optional native clients and command-line tools are available only when separately installed.\n"
+        "Use System Settings to adjust languages, input and keyboard shortcuts."
     )
     apps_desc.setWordWrap(True)
     l_apps.addWidget(apps_desc)
 
     btn_row = QHBoxLayout()
-    ag_btn = QPushButton("Launch Antigravity")
-    ag_btn.clicked.connect(lambda: subprocess.Popen(["/opt/antigravity/antigravity"]))
+    ag_btn = QPushButton("Open ChatGPT")
+    ag_btn.clicked.connect(lambda: subprocess.Popen(["xdg-open", "https://chatgpt.com"]))
     btn_row.addWidget(ag_btn)
-    claude_btn = QPushButton("Sign In to Claude CLI")
+    claude_btn = QPushButton("Open Claude")
     claude_btn.setObjectName("secondary")
-    claude_btn.clicked.connect(lambda: subprocess.Popen(["konsole", "-e", "claude"]))
+    claude_btn.clicked.connect(lambda: subprocess.Popen(["xdg-open", "https://claude.ai"]))
     btn_row.addWidget(claude_btn)
     l_apps.addLayout(btn_row)
     l_apps.addStretch()
