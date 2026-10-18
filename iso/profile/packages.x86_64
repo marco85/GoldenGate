@@ -16,6 +16,9 @@ dosfstools
 e2fsprogs
 mtools
 squashfs-tools
+arch-install-scripts
+parted
+gptfdisk
 pv
 plymouth
 sudo
@@ -25,6 +28,7 @@ polkit-kde-agent
 # === Surface Laptop 5 Hardware, Power, Memory & GPU ===
 thermald
 power-profiles-daemon
+iio-sensor-proxy
 zram-generator
 upower
 acpid
@@ -140,7 +144,10 @@ ttf-liberation
 fontconfig
 
 # === Daily Productivity, AI & GUI Toolkits ===
+chromium
 libreoffice-fresh
+tesseract
+tesseract-data-eng
 nodejs
 npm
 python

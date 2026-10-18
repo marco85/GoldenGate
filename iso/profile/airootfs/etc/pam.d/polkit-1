@@ -1,6 +1,6 @@
 #%PAM-1.0
-# GoldenGate OS — Polkit GUI Prompts with Face ID (Howdy IR Camera) + Password Fallback
-auth        sufficient  pam_howdy.so
+# GoldenGate OS — Polkit GUI Prompts with Face ID (Howdy IR Camera + Animated HUD) + Password Fallback
+-auth       sufficient  pam_howdy.so
 auth        include     system-auth
 account     include     system-auth
 password    include     system-auth

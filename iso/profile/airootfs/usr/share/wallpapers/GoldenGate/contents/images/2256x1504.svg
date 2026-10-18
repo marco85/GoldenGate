@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2256" height="1504" viewBox="0 0 2256 1504">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="45%" stop-color="#2E1F3E"/>
+      <stop offset="78%" stop-color="#83384B"/>
+      <stop offset="100%" stop-color="#D96B43"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2A1E36"/>
+      <stop offset="100%" stop-color="#0B101D"/>
+    </linearGradient>
+  </defs>
+  <rect width="2256" height="1080" fill="url(#sky)"/>
+  <path d="M0,980 Q560,780 1128,940 T2256,880 L2256,1100 L0,1100 Z" fill="#1B1528" opacity="0.85"/>
+  <!-- Golden Gate Bridge Silhouette -->
+  <rect x="580" y="420" width="28" height="660" fill="#C0392B"/>
+  <rect x="1648" y="420" width="28" height="660" fill="#C0392B"/>
+  <path d="M0,840 Q290,820 594,440" stroke="#E74C3C" stroke-width="10" fill="none"/>
+  <path d="M594,440 Q1128,890 1662,440" stroke="#E74C3C" stroke-width="12" fill="none"/>
+  <path d="M1662,440 Q1960,820 2256,840" stroke="#E74C3C" stroke-width="10" fill="none"/>
+  <rect x="0" y="845" width="2256" height="16" fill="#C0392B"/>
+  <rect x="0" y="1080" width="2256" height="424" fill="url(#water)"/>
+</svg>

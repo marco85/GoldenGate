@@ -289,10 +289,17 @@ Rectangle {
         sddm.login(root.resolvedUser, passwordInput.text, sessionModel.lastIndex);
     }
 
+    Timer {
+        id: unlockTimer
+        interval: 420
+        running: false
+        repeat: false
+        onTriggered: root.doLogin()
+    }
+
     function triggerFaceUnlock() {
         root.faceIdState = "unlocked";
-        // Auto-login on recognized face
-        var delayTimer = Qt.createQmlObject('import QtQuick 2.15; Timer { interval: 400; running: true; repeat: false; onTriggered: doLogin(); }', root, "unlockTimer");
+        unlockTimer.restart();
     }
 
     Connections {

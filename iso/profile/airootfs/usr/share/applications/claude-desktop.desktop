@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Claude
+Comment=Anthropic Claude AI Workspace & CLI
+Exec=/bin/sh -c 'chromium --app="https://claude.ai" || google-chrome-stable --app="https://claude.ai" || xdg-open "https://claude.ai"'
+Icon=utilities-terminal
+Terminal=false
+Type=Application
+Categories=Development;Utility;ArtificialIntelligence;

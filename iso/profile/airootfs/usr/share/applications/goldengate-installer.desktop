@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Install GoldenGate OS
+Comment=Install macOS 27 Golden Gate to Surface Laptop 5 SSD
+Exec=/usr/bin/goldengate-installer
+Icon=system-software-install
+Terminal=false
+Type=Application
+Categories=System;

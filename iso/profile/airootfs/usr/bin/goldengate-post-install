@@ -17,7 +17,7 @@ if [ -f /etc/default/grub ]; then
 fi
 
 # 3. Enable essential system & Surface Laptop 5 services
-for svc in sddm NetworkManager bluetooth avahi-daemon iptsd thermald power-profiles-daemon systemd-oomd fstrim.timer; do
+for svc in sddm NetworkManager bluetooth avahi-daemon usbmuxd iptsd thermald power-profiles-daemon iio-sensor-proxy systemd-oomd fstrim.timer; do
     systemctl enable "$svc" 2>/dev/null || true
 done
 
@@ -26,8 +26,11 @@ if [ -x /usr/bin/goldengate-faceid-setup ]; then
     /usr/bin/goldengate-faceid-setup --configure >/dev/null 2>&1 || true
 fi
 
-# 5. Remove live-session-only autologin and live checklist autostart
+# 5. Remove live-session-only autologin, live checklist autostart, and live installer Desktop shortcut
 rm -f /etc/sddm.conf.d/20-live-autologin.conf
 rm -f /etc/xdg/autostart/goldengate-live-checklist.desktop
+rm -f /etc/skel/Desktop/goldengate-installer.desktop
+rm -f /home/*/Desktop/goldengate-installer.desktop 2>/dev/null || true
+rm -f /etc/sudoers.d/99-live
 
 exit 0

@@ -1,6 +1,12 @@
 // GoldenGate OS — macOS 27 "Golden Gate" Plasma 6 Layout
-// 1. Top Menu Bar (28px): Apple Launcher + Global Menu + Spacer + Auto-Collapsing Clutter Control System Tray + Clock
-// 2. Bottom Floating Liquid Glass Dock (58px): Finder, Launchpad, Chrome, Antigravity, Claude, Codex, AirDrop, LibreOffice, Terminal, Liquid Glass, Settings, Trash
+// 1. Removes any default taskbar panels
+// 2. Top Menu Bar (28px): Apple Launcher + Global Menu + Spacer + Auto-Collapsing Clutter Control System Tray + Clock
+// 3. Bottom Floating Liquid Glass Dock (58px): Finder, Launchpad, Safari/Chrome, Antigravity, Claude, Codex, iCloud, Photos, AirDrop, Toolbox, Writer, Terminal, Liquid Glass, Settings, Trash
+
+var existingPanels = panels();
+for (var i = 0; i < existingPanels.length; i++) {
+    existingPanels[i].remove();
+}
 
 var topBar = new Panel("org.kde.panel");
 topBar.location = "top";
@@ -56,15 +62,19 @@ tasks.writeConfig("launchers", [
     "applications:antigravity.desktop",
     "applications:claude-desktop.desktop",
     "applications:chatgpt-codex.desktop",
-    "applications:goldengate-toolbox.desktop",
+    "applications:icloud-drive.desktop",
+    "applications:icloud-photos.desktop",
     "applications:goldengate-airdrop.desktop",
+    "applications:goldengate-toolbox.desktop",
     "applications:libreoffice-writer.desktop",
     "applications:org.kde.konsole.desktop",
     "applications:goldengate-liquid-glass.desktop",
+    "applications:goldengate-faceid.desktop",
     "applications:systemsettings.desktop"
 ]);
 tasks.writeConfig("showOnlyCurrentDesktop", false);
 tasks.writeConfig("groupingStrategy", 1);
+tasks.writeConfig("iconSpacing", 1);
 
 dock.addWidget("org.kde.plasma.marginsseparator");
 dock.addWidget("org.kde.plasma.trash");

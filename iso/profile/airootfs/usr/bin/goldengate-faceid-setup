@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
 """
-GoldenGate OS — Surface Laptop 5 IR Camera ("Face ID") Detection & Enrollment
+GoldenGate OS — Surface Laptop 5 IR Camera ("Face ID") Detection, Enrollment & Animated HUD
 Detects the Surface Laptop 5 USB UVC IR camera (045e:0965 / /dev/v4l/by-id/*IR* / /dev/video2),
-configures linux-enable-ir-emitter and /etc/howdy/config.ini, and enrolls a Face ID model.
+configures linux-enable-ir-emitter and /etc/howdy/config.ini, enrolls Face ID models, and renders
+the authentic Apple Face ID animated HUD (scanning brackets -> spring-open padlock -> #30D158 checkmark,
+or 5-step horizontal head-shake on failure).
 """
 from __future__ import annotations
 import argparse
-import glob
 import json
+import math
 import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+FACEID_SOUND = Path("/usr/share/sounds/goldengate/faceid-unlock.wav")
+
 
 def detect_ir_camera(sysfs_root: str = "/sys/class/video4linux", by_id_dir: str = "/dev/v4l/by-id") -> dict:
     """Finds the Surface Laptop 5 IR V4L2 device node."""
-    # 1. Check /dev/v4l/by-id for IR camera symlink
     by_id_path = Path(by_id_dir)
     if by_id_path.is_dir():
         for entry in sorted(by_id_path.iterdir()):
@@ -25,7 +28,6 @@ def detect_ir_camera(sysfs_root: str = "/sys/class/video4linux", by_id_dir: str 
                 resolved = str(entry.resolve())
                 return {"device": resolved, "name": entry.name, "source": "v4l-by-id"}
 
-    # 2. Check /sys/class/video4linux/video*/name
     sys_path = Path(sysfs_root)
     if sys_path.is_dir():
         for vdir in sorted(sys_path.glob("video*")):
@@ -39,7 +41,6 @@ def detect_ir_camera(sysfs_root: str = "/sys/class/video4linux", by_id_dir: str 
                         "source": "sysfs",
                     }
 
-    # 3. Default Surface Laptop 5 IR node fallback (/dev/video2)
     return {
         "device": "/dev/video2",
         "name": "Microsoft Surface IR Camera Front (Default)",
@@ -100,6 +101,11 @@ def configure_system_faceid(device_path: str, config_target: Path = Path("/etc/h
     }
 
 
+def play_unlock_sound() -> None:
+    if FACEID_SOUND.is_file() and shutil.which("pw-play"):
+        subprocess.Popen(["pw-play", str(FACEID_SOUND)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def enroll_user_face(user: str | None = None, label: str = "GoldenGate-FaceID") -> bool:
     if not shutil.which("howdy"):
         return False
@@ -108,7 +114,234 @@ def enroll_user_face(user: str | None = None, label: str = "GoldenGate-FaceID") 
         cmd.extend(["-U", user])
     cmd.extend(["add", "-y", label])
     res = subprocess.run(cmd, check=False)
+    if res.returncode == 0:
+        play_unlock_sound()
     return res.returncode == 0
+
+
+def run_faceid_hud(initial_state: str = "scanning", auto_close_ms: int = 1800) -> int:
+    """Renders the authentic Apple Face ID Floating HUD with scanning brackets, spring padlock & shake."""
+    try:
+        from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer
+        from PyQt6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
+        from PyQt6.QtWidgets import QApplication, QWidget
+    except ImportError:
+        return 0
+
+    app = QApplication.instance() or QApplication(sys.argv)
+
+    class FaceIdHud(QWidget):
+        def __init__(self, state: str) -> None:
+            super().__init__()
+            self.state = state  # "scanning" -> "unlocked" | "failed"
+            self.tick = 0
+            self.shackle_angle = 0.0
+            self.shackle_lift = 0.0
+            self.shake_offset = 0.0
+            self.setWindowFlags(
+                Qt.WindowType.FramelessWindowHint
+                | Qt.WindowType.WindowStaysOnTopHint
+                | Qt.WindowType.Tool
+            )
+            self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            self.setFixedSize(210, 220)
+
+            screen = app.primaryScreen()
+            if screen:
+                geo = screen.availableGeometry()
+                self.move(geo.center().x() - 105, geo.top() + 80)
+
+            self.anim_timer = QTimer(self)
+            self.anim_timer.timeout.connect(self.on_frame)
+            self.anim_timer.start(16)
+
+            if self.state == "scanning":
+                QTimer.singleShot(850, self.transition_to_unlocked)
+            elif self.state == "unlocked":
+                self.transition_to_unlocked()
+            elif self.state == "failed":
+                self.transition_to_failed()
+
+            if auto_close_ms > 0:
+                QTimer.singleShot(auto_close_ms, self.close)
+
+        def transition_to_unlocked(self) -> None:
+            self.state = "unlocked"
+            self.tick = 0
+            play_unlock_sound()
+
+        def transition_to_failed(self) -> None:
+            self.state = "failed"
+            self.tick = 0
+
+        def on_frame(self) -> None:
+            self.tick += 1
+            if self.state == "unlocked":
+                target_angle = -28.0
+                target_lift = -7.0
+                self.shackle_angle += (target_angle - self.shackle_angle) * 0.24
+                self.shackle_lift += (target_lift - self.shackle_lift) * 0.24
+                self.shake_offset = 0.0
+            elif self.state == "failed":
+                if self.tick < 28:
+                    self.shake_offset = math.sin(self.tick * 0.85) * 11.0 * math.exp(-self.tick * 0.06)
+                else:
+                    self.shake_offset = 0.0
+            self.update()
+
+        def paintEvent(self, _event) -> None:
+            p = QPainter(self)
+            p.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+            # Frosted dark glass card
+            card_rect = QRectF(10 + self.shake_offset, 10, 190, 200)
+            p.setPen(QPen(QColor(255, 255, 255, 55), 1.2))
+            p.setBrush(QColor(18, 20, 28, 232))
+            p.drawRoundedRect(card_rect, 28, 28)
+
+            cx = card_rect.center().x()
+            cy = card_rect.top() + 82
+
+            if self.state == "unlocked":
+                color = QColor("#30D158")
+            elif self.state == "failed":
+                color = QColor("#FF453A")
+            else:
+                color = QColor("#F5F5F7")
+
+            # Draw Apple Face ID Corner Brackets [ · · ]
+            pulse = 1.0 + (0.05 * math.sin(self.tick * 0.18) if self.state == "scanning" else 0.0)
+            half = 38.0 * pulse
+            corner = 12.0
+            pen = QPen(color, 3.2, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin)
+            p.setPen(pen)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+
+            for sx in (-1, 1):
+                for sy in (-1, 1):
+                    x0 = cx + sx * half
+                    y0 = cy + sy * half
+                    p.drawLine(QPointF(x0, y0), QPointF(x0 - sx * corner, y0))
+                    p.drawLine(QPointF(x0, y0), QPointF(x0, y0 - sy * corner))
+
+            # Draw Animated Padlock in center
+            p.save()
+            p.translate(cx + 10, cy - 4 + self.shackle_lift)
+            p.rotate(self.shackle_angle)
+            shackle_rect = QRectF(-20, -18, 20, 22)
+            p.setPen(QPen(color, 3.0, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawRoundedRect(shackle_rect, 10, 10)
+            p.restore()
+
+            body_rect = QRectF(cx - 14, cy - 2, 28, 22)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(color)
+            p.drawRoundedRect(body_rect, 6, 6)
+
+            # Keyhole dot
+            p.setBrush(QColor(18, 20, 28))
+            p.drawEllipse(QPointF(cx, cy + 9), 2.5, 2.5)
+
+            # Status label
+            p.setPen(color)
+            p.setFont(QFont("Inter", 12, QFont.Weight.DemiBold))
+            label = (
+                "Face ID Unlocked"
+                if self.state == "unlocked"
+                else ("Face Not Recognized" if self.state == "failed" else "Face ID")
+            )
+            p.drawText(QRectF(card_rect.left(), card_rect.bottom() - 46, card_rect.width(), 30), Qt.AlignmentFlag.AlignCenter, label)
+
+    hud = FaceIdHud(initial_state)
+    hud.show()
+    return app.exec()
+
+
+def run_gui() -> int:
+    try:
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QHBoxLayout,
+            QLabel,
+            QPushButton,
+            QVBoxLayout,
+            QWidget,
+        )
+    except ImportError:
+        print(json.dumps(detect_ir_camera(), indent=2))
+        return 0
+
+    detected = detect_ir_camera()
+    app = QApplication(sys.argv)
+    win = QWidget()
+    win.setWindowTitle("Face ID & Passcode — GoldenGate OS")
+    win.setFixedSize(560, 380)
+    win.setStyleSheet("""
+        QWidget {
+            background-color: rgba(24, 26, 36, 242);
+            color: #F4F6FA;
+            font-family: 'Inter', sans-serif;
+            border-radius: 10px;
+        }
+        QPushButton {
+            background-color: #0A84FF;
+            color: white;
+            border-radius: 8px;
+            padding: 9px 18px;
+            font-weight: 600;
+        }
+        QPushButton#secondary {
+            background-color: rgba(255, 255, 255, 24);
+            border: 1px solid rgba(255, 255, 255, 45);
+        }
+    """)
+
+    layout = QVBoxLayout(win)
+    layout.setContentsMargins(24, 22, 24, 22)
+    layout.setSpacing(12)
+
+    title = QLabel("🔒 Face ID & Passcode (Surface Laptop 5 IR Camera)")
+    title.setFont(QFont("Inter", 15, QFont.Weight.Bold))
+    layout.addWidget(title)
+
+    info = QLabel(
+        f"Detected Infrared Camera: {detected['name']} ({detected['device']})\n\n"
+        "GoldenGate OS uses your Surface Laptop 5 front infrared emitter and camera "
+        "to unlock the Lock Screen, SDDM, Polkit dialogs, and sudo with the Apple Face ID animation."
+    )
+    info.setWordWrap(True)
+    layout.addWidget(info)
+
+    btn_row1 = QHBoxLayout()
+    enroll_btn = QPushButton("Set Up Face ID (Scan Face)…")
+    enroll_btn.clicked.connect(
+        lambda: subprocess.Popen(["pkexec", "/usr/bin/goldengate-faceid-setup", "--configure", "--enroll"])
+    )
+    btn_row1.addWidget(enroll_btn)
+
+    preview_unlock_btn = QPushButton("Preview Face ID Unlock Animation")
+    preview_unlock_btn.setObjectName("secondary")
+    preview_unlock_btn.clicked.connect(
+        lambda: subprocess.Popen([sys.executable, __file__, "--show-hud", "scanning"])
+    )
+    btn_row1.addWidget(preview_unlock_btn)
+    layout.addLayout(btn_row1)
+
+    btn_row2 = QHBoxLayout()
+    preview_fail_btn = QPushButton("Preview 'Face Not Recognized' Shake")
+    preview_fail_btn.setObjectName("secondary")
+    preview_fail_btn.clicked.connect(
+        lambda: subprocess.Popen([sys.executable, __file__, "--show-hud", "failed"])
+    )
+    btn_row2.addWidget(preview_fail_btn)
+    btn_row2.addStretch()
+    layout.addLayout(btn_row2)
+
+    layout.addStretch()
+    win.show()
+    return app.exec()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -118,20 +351,30 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--enroll", action="store_true", help="Enroll current user's face model")
     parser.add_argument("--user", type=str, help="Username for enrollment")
     parser.add_argument("--config-path", type=str, default="/etc/howdy/config.ini", help="Target howdy config path")
+    parser.add_argument("--show-hud", choices=["scanning", "unlocked", "failed"], help="Show Apple Face ID animated HUD")
+    parser.add_argument("--gui", action="store_true", help="Open Face ID & Passcode GUI")
     args = parser.parse_args(argv)
+
+    if args.show_hud:
+        return run_faceid_hud(args.show_hud)
 
     detected = detect_ir_camera()
     if args.detect and not args.configure and not args.enroll:
         print(json.dumps(detected, indent=2))
         return 0
 
-    result = {"detected": detected}
-    if args.configure:
-        result["configured"] = configure_system_faceid(detected["device"], Path(args.config_path))
-    if args.enroll:
-        result["enrolled"] = enroll_user_face(args.user)
+    if args.configure or args.enroll:
+        result = {"detected": detected}
+        if args.configure:
+            result["configured"] = configure_system_faceid(detected["device"], Path(args.config_path))
+        if args.enroll:
+            result["enrolled"] = enroll_user_face(args.user)
+        print(json.dumps(result, indent=2))
+        return 0
 
-    print(json.dumps(result, indent=2))
+    if args.gui or (not args.detect and not args.configure and not args.enroll):
+        return run_gui()
+
     return 0
 
 

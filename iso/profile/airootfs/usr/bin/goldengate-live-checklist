@@ -105,7 +105,7 @@ def run_gui() -> int:
     layout.addStretch()
     btn_row = QHBoxLayout()
     install_btn = QPushButton("💿 Install GoldenGate OS to Surface SSD…")
-    install_btn.clicked.connect(lambda: subprocess.Popen(["sudo", "-E", "calamares"]))
+    install_btn.clicked.connect(lambda: subprocess.Popen(["sudo", "-E", "/usr/bin/goldengate-installer"]))
     btn_row.addWidget(install_btn)
     layout.addLayout(btn_row)
 

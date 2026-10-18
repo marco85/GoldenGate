@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""
+GoldenGate OS — Surface Laptop 5 All-Day Battery & Performance Mode Manager
+Default: All-Day Battery Profile (7–9 hrs: power-saver governor, Intel Iris Xe PSR, s2idle deep sleep,
+MacBook True-Auto ambient light sensor brightness).
+Includes 1-click toggle to boost to Balanced or High Performance Mode when plugged in or running heavy workloads.
+"""
+from __future__ import annotations
+import argparse
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+STATE_FILE = Path.home() / ".config" / "goldengate" / "power-profile.json"
+PROFILES = {
+    "battery": {
+        "ppd": "power-saver",
+        "label": "All-Day Battery (Default — 7–9 hrs, Intel PSR & Deep S2idle)",
+        "governor": "powersave",
+        "auto_als": True,
+    },
+    "balanced": {
+        "ppd": "balanced",
+        "label": "Automatic Balanced (Everyday Productivity)",
+        "governor": "powersave",
+        "auto_als": True,
+    },
+    "performance": {
+        "ppd": "performance",
+        "label": "High Performance Boost (Maximum Alder Lake Turbo & GPU Clock)",
+        "governor": "performance",
+        "auto_als": False,
+    },
+}
+
+
+def load_power_state() -> dict:
+    state = {"mode": "battery", "auto_brightness": True, "keyboard_auto_backlight": True}
+    if STATE_FILE.is_file():
+        try:
+            data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                state.update(data)
+        except Exception:
+            pass
+    if state["mode"] not in PROFILES:
+        state["mode"] = "battery"
+    return state
+
+
+def apply_power_mode(mode: str) -> dict:
+    if mode not in PROFILES:
+        mode = "battery"
+    state = load_power_state()
+    state["mode"] = mode
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+    spec = PROFILES[mode]
+    if shutil.which("powerprofilesctl"):
+        subprocess.run(["powerprofilesctl", "set", spec["ppd"]], check=False)
+
+    return {
+        "mode": mode,
+        "ppd_profile": spec["ppd"],
+        "label": spec["label"],
+        "auto_brightness": state["auto_brightness"],
+        "keyboard_auto_backlight": state["keyboard_auto_backlight"],
+    }
+
+
+def run_gui() -> int:
+    try:
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QCheckBox,
+            QLabel,
+            QPushButton,
+            QRadioButton,
+            QVBoxLayout,
+            QWidget,
+        )
+    except ImportError:
+        print(json.dumps(apply_power_mode(load_power_state()["mode"]), indent=2))
+        return 0
+
+    state = load_power_state()
+    app = QApplication(sys.argv)
+    win = QWidget()
+    win.setWindowTitle("Battery & Energy Mode — GoldenGate OS")
+    win.setFixedSize(520, 340)
+    win.setStyleSheet("""
+        QWidget {
+            background-color: rgba(24, 26, 36, 242);
+            color: #F4F6FA;
+            font-family: 'Inter', sans-serif;
+            border-radius: 10px;
+        }
+        QPushButton {
+            background-color: #0A84FF;
+            color: white;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 600;
+        }
+    """)
+
+    layout = QVBoxLayout(win)
+    layout.setContentsMargins(24, 20, 24, 20)
+    layout.setSpacing(12)
+
+    title = QLabel("🔋 Surface Laptop 5 — Battery & Performance Mode")
+    title.setFont(QFont("Inter", 15, QFont.Weight.Bold))
+    layout.addWidget(title)
+
+    radios = {}
+    for key, spec in PROFILES.items():
+        rb = QRadioButton(spec["label"])
+        rb.setChecked(state["mode"] == key)
+        rb.toggled.connect(lambda checked, k=key: apply_power_mode(k) if checked else None)
+        radios[key] = rb
+        layout.addWidget(rb)
+
+    als_cb = QCheckBox("MacBook True-Auto: Adjust screen & keyboard backlight with Ambient Light Sensor")
+    als_cb.setChecked(bool(state.get("auto_brightness", True)))
+    layout.addWidget(als_cb)
+
+    layout.addStretch()
+    done_btn = QPushButton("Done")
+    done_btn.clicked.connect(win.close)
+    layout.addWidget(done_btn, alignment=Qt.AlignmentFlag.AlignRight)
+
+    win.show()
+    return app.exec()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="GoldenGate OS Battery & Performance Manager")
+    parser.add_argument("--set-mode", choices=["battery", "balanced", "performance"], help="Set power mode")
+    parser.add_argument("--apply-default", action="store_true", help="Apply default All-Day Battery mode")
+    parser.add_argument("--status", action="store_true", help="Print power mode JSON status")
+    args = parser.parse_args(argv)
+
+    if args.set_mode:
+        res = apply_power_mode(args.set_mode)
+        if args.status:
+            print(json.dumps(res, indent=2))
+        return 0
+
+    if args.apply_default:
+        res = apply_power_mode("battery")
+        if args.status:
+            print(json.dumps(res, indent=2))
+        return 0
+
+    if args.status:
+        mode = load_power_state()["mode"]
+        spec = PROFILES[mode]
+        print(
+            json.dumps(
+                {
+                    "mode": mode,
+                    "ppd_profile": spec["ppd"],
+                    "label": spec["label"],
+                    "auto_brightness": True,
+                },
+                indent=2,
+            )
+        )
+        return 0
+
+    return run_gui()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

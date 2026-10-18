@@ -1,6 +1,6 @@
 #%PAM-1.0
 # GoldenGate OS — SDDM Login with Face ID (Howdy IR Camera) + Password Fallback
-auth        sufficient  pam_howdy.so
+-auth       sufficient  pam_howdy.so
 auth        include     system-login
 -auth       optional    pam_kwallet5.so
 account     include     system-login

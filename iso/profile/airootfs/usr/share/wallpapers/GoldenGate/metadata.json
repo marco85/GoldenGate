@@ -1,0 +1,8 @@
+{
+    "KPlugin": {
+        "Authors": [{"Name": "GoldenGate OS"}],
+        "Id": "GoldenGate",
+        "License": "CC-BY-SA-4.0",
+        "Name": "macOS 27 Golden Gate Dynamic"
+    }
+}

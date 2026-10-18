@@ -30,23 +30,33 @@ for pam_f in /etc/pam.d/sddm /etc/pam.d/kde /etc/pam.d/sudo /etc/pam.d/polkit-1;
     fi
 done
 
-# 4. Link Antigravity GUI binary to /usr/local/bin/antigravity if present
+# 4. Link Antigravity GUI binary, Chrome PWA wrapper, and GoldenGate Installer
 if [ -x /opt/antigravity/antigravity ]; then
     ln -sf /opt/antigravity/antigravity /usr/local/bin/antigravity
 elif [ -x /opt/antigravity/Antigravity ]; then
     ln -sf /opt/antigravity/Antigravity /opt/antigravity/antigravity
     ln -sf /opt/antigravity/Antigravity /usr/local/bin/antigravity
 fi
+ln -sf /usr/bin/goldengate-installer /usr/local/bin/calamares
+if [ -x /usr/bin/chromium ] && [ ! -e /usr/bin/google-chrome-stable ]; then
+    ln -sf /usr/bin/chromium /usr/local/bin/google-chrome-stable
+fi
+chmod +x /home/live/Desktop/*.desktop 2>/dev/null || true
 
-# 5. Enable core system & Surface Laptop 5 services
-for svc in sddm NetworkManager bluetooth avahi-daemon usbmuxd iptsd thermald power-profiles-daemon systemd-oomd; do
+# 5. Clean up build-time-only [goldengate-custom] local repo from /etc/pacman.conf so pacman works after boot
+if [ -f /etc/pacman.conf ]; then
+    sed -i '/^\[goldengate-custom\]/,+2d' /etc/pacman.conf
+fi
+
+# 6. Enable core system & Surface Laptop 5 services (including ambient light sensor iio-sensor-proxy)
+for svc in sddm NetworkManager bluetooth avahi-daemon usbmuxd iptsd thermald power-profiles-daemon iio-sensor-proxy systemd-oomd; do
     systemctl enable "$svc" 2>/dev/null || true
 done
 
-# 6. Set root password for emergency/rescue debugging and ensure live user has no password
+# 7. Set root password for emergency/rescue debugging and ensure live user has no password
 echo "root:goldengate" | chpasswd
 passwd -d live >/dev/null 2>&1 || true
 
-# 7. Generate live initramfs with archiso hooks for linux-surface kernel
+# 8. Generate live initramfs with archiso hooks for linux-surface kernel
 mkinitcpio -P
 

@@ -249,3 +249,36 @@ def test_archiso_mkinitcpio_live_hooks():
     assert "mkinitcpio -P" in customize
     assert "root:goldengate" in customize
 
+
+def test_goldengate_installer_and_power_profile():
+    # Verify native GoldenGate SSD installer dry-run
+    res = subprocess.run(
+        [sys.executable, str(BIN_DIR / "goldengate-installer"), "--dry-run", "/dev/nvme0n1"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    plan = json.loads(res.stdout)
+    assert plan["filesystem"] == "ext4"
+    assert plan["efi_partition"] == "/dev/nvme0n1p1"
+    assert plan["root_partition"] == "/dev/nvme0n1p2"
+
+    # Verify Surface All-Day Battery & 1-Click Performance Boost manager
+    res_pwr = subprocess.run(
+        [sys.executable, str(BIN_DIR / "goldengate-power-profile"), "--status"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    pwr = json.loads(res_pwr.stdout)
+    assert "mode" in pwr and "ppd_profile" in pwr and pwr["auto_brightness"] is True
+
+    # Verify QuickLook Live Text OCR support and macOS desktop polish files
+    ql_text = (BIN_DIR / "goldengate-quicklook").read_text(encoding="utf-8")
+    assert "tesseract" in ql_text
+    assert "Copy Text from Image (Live Text)" in ql_text
+    assert (AIROOTFS / "usr" / "share" / "aurorae" / "themes" / "WhiteSur-dark" / "WhiteSur-darkrc").is_file()
+    assert (AIROOTFS / "usr" / "share" / "wallpapers" / "GoldenGate" / "contents" / "images" / "2256x1504.svg").is_file()
+    assert (AIROOTFS / "etc" / "skel" / "Desktop" / "goldengate-installer.desktop").is_file()
+
+

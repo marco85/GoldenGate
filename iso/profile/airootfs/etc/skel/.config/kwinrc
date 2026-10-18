@@ -62,3 +62,13 @@ VirtualKeyboardEnabled=true
 [Xwayland]
 XwaylandEavesdrops=All
 XwaylandEavesdropsMouse=true
+
+[ElectricBorders]
+TopLeft=Overview
+BottomRight=ShowDesktop
+
+[LaunchFeedback]
+Bouncing=true
+Cursor=true
+Timeout=5
+

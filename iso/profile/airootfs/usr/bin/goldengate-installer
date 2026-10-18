@@ -1,0 +1,448 @@
+#!/usr/bin/env python3
+"""
+GoldenGate OS — macOS 27 Golden Gate Native Disk Installer (Surface Laptop 5)
+Installs GoldenGate OS from the live USB onto the Surface Laptop 5 NVMe SSD (/dev/nvme0n1):
+  1. Safely enumerates internal disks (strictly excluding the live USB boot medium & SANDISK USB).
+  2. Creates GPT layout: 512 MiB FAT32 EFI System Partition + ext4 Root Partition (no Btrfs snapshot overhead).
+  3. Extracts airootfs.sfs, copies vmlinuz-linux-surface to /boot, and generates /etc/fstab.
+  4. Switches mkinitcpio from live archiso hooks to installed-system NVMe hooks and runs mkinitcpio -P.
+  5. Creates the user account, applies Golden Gate desktop skel, and installs UEFI GRUB.
+"""
+from __future__ import annotations
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+INSTALLED_MKINITCPIO_CONF = """# GoldenGate OS Installed System mkinitcpio.conf (Surface Laptop 5 NVMe)
+MODULES=(intel_lpss_pci surface_aggregator surface_aggregator_registry surface_hid nvme)
+BINARIES=()
+FILES=()
+HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)
+COMPRESSION="zstd"
+"""
+
+
+def get_live_boot_device() -> str:
+    """Returns the parent block device name of /run/archiso/bootmnt so it is never overwritten."""
+    try:
+        res = subprocess.run(
+            ["findmnt", "-n", "-o", "SOURCE", "/run/archiso/bootmnt"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        src = res.stdout.strip()
+        if src:
+            base = Path(src).name
+            return re.sub(r"p?\d+$", "", base)
+    except Exception:
+        pass
+    return ""
+
+
+def list_installable_disks() -> list[dict]:
+    live_dev = get_live_boot_device()
+    disks = []
+    if shutil.which("lsblk"):
+        try:
+            res = subprocess.run(
+                ["lsblk", "-J", "-b", "-d", "-o", "NAME,SIZE,MODEL,TRAN,RM,TYPE"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            data = json.loads(res.stdout)
+            for blk in data.get("blockdevices", []):
+                name = blk.get("name", "")
+                if blk.get("type") != "disk":
+                    continue
+                if name.startswith(("loop", "zram", "ram", "sr")):
+                    continue
+                if live_dev and name == live_dev:
+                    continue
+                size_bytes = int(blk.get("size") or 0)
+                if size_bytes < 20_000_000_000:
+                    continue
+                model = (blk.get("model") or "Internal SSD").strip()
+                if "sandisk" in model.lower():
+                    continue
+                disks.append(
+                    {
+                        "device": f"/dev/{name}",
+                        "name": name,
+                        "size_gb": round(size_bytes / (1024**3), 1),
+                        "model": model,
+                        "removable": bool(blk.get("rm")),
+                    }
+                )
+        except Exception:
+            pass
+    if not disks:
+        disks.append(
+            {
+                "device": "/dev/nvme0n1",
+                "name": "nvme0n1",
+                "size_gb": 256.0,
+                "model": "Microsoft Surface NVMe SSD",
+                "removable": False,
+            }
+        )
+    return disks
+
+
+def partition_paths_for_disk(disk_dev: str) -> tuple[str, str]:
+    if re.search(r"\d$", disk_dev):
+        return f"{disk_dev}p1", f"{disk_dev}p2"
+    return f"{disk_dev}1", f"{disk_dev}2"
+
+
+def build_install_plan(
+    disk_dev: str,
+    username: str,
+    full_name: str,
+    hostname: str = "Surface-GoldenGate",
+    autologin: bool = False,
+) -> dict:
+    efi_part, root_part = partition_paths_for_disk(disk_dev)
+    return {
+        "disk": disk_dev,
+        "efi_partition": efi_part,
+        "root_partition": root_part,
+        "filesystem": "ext4",
+        "username": username,
+        "full_name": full_name,
+        "hostname": hostname,
+        "autologin": autologin,
+        "steps": [
+            f"sgdisk --zap-all {disk_dev}",
+            f"parted -s {disk_dev} mklabel gpt",
+            f"parted -s {disk_dev} mkpart ESP fat32 1MiB 513MiB",
+            f"parted -s {disk_dev} set 1 esp on",
+            f"parted -s {disk_dev} mkpart GoldenGateRoot ext4 513MiB 100%",
+            f"mkfs.fat -F32 -n EFI {efi_part}",
+            f"mkfs.ext4 -F -L GoldenGateRoot {root_part}",
+            "unsquashfs -f -d /mnt/goldengate-install /run/archiso/bootmnt/arch/x86_64/airootfs.sfs",
+            "cp -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux-surface /mnt/goldengate-install/boot/vmlinuz-linux-surface",
+            "genfstab -U /mnt/goldengate-install",
+            "rm -f /mnt/goldengate-install/etc/mkinitcpio.conf.d/archiso.conf",
+            "arch-chroot /mnt/goldengate-install /usr/bin/goldengate-post-install",
+            "arch-chroot /mnt/goldengate-install mkinitcpio -P",
+            "arch-chroot /mnt/goldengate-install grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GoldenGate --recheck",
+            "arch-chroot /mnt/goldengate-install grub-mkconfig -o /boot/grub/grub.cfg",
+        ],
+    }
+
+
+def execute_install(
+    disk_dev: str,
+    username: str,
+    full_name: str,
+    password: str,
+    hostname: str = "Surface-GoldenGate",
+    autologin: bool = False,
+    log_cb=None,
+) -> bool:
+    def log(msg: str) -> None:
+        print(msg, flush=True)
+        if log_cb:
+            log_cb(msg)
+
+    efi_part, root_part = partition_paths_for_disk(disk_dev)
+    target = Path("/mnt/goldengate-install")
+
+    try:
+        log(f"[1/8] Partitioning {disk_dev} (512 MiB EFI + ext4 Root)…")
+        subprocess.run(["umount", "-R", str(target)], check=False)
+        subprocess.run(["sgdisk", "--zap-all", disk_dev], check=False)
+        subprocess.run(["parted", "-s", disk_dev, "mklabel", "gpt"], check=True)
+        subprocess.run(["parted", "-s", disk_dev, "mkpart", "ESP", "fat32", "1MiB", "513MiB"], check=True)
+        subprocess.run(["parted", "-s", disk_dev, "set", "1", "esp", "on"], check=True)
+        subprocess.run(["parted", "-s", disk_dev, "mkpart", "GoldenGateRoot", "ext4", "513MiB", "100%"], check=True)
+        subprocess.run(["udevadm", "settle"], check=False)
+
+        log(f"[2/8] Formatting {efi_part} (FAT32) and {root_part} (ext4)…")
+        subprocess.run(["mkfs.fat", "-F32", "-n", "EFI", efi_part], check=True)
+        subprocess.run(["mkfs.ext4", "-F", "-L", "GoldenGateRoot", root_part], check=True)
+
+        log(f"[3/8] Mounting target filesystems at {target}…")
+        target.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["mount", root_part, str(target)], check=True)
+        (target / "boot" / "efi").mkdir(parents=True, exist_ok=True)
+        subprocess.run(["mount", efi_part, str(target / "boot" / "efi")], check=True)
+
+        log("[4/8] Extracting GoldenGate OS system image (takes ~2–3 minutes)…")
+        sfs = Path("/run/archiso/bootmnt/arch/x86_64/airootfs.sfs")
+        subprocess.run(["unsquashfs", "-f", "-d", str(target), str(sfs)], check=True)
+
+        log("[5/8] Installing linux-surface kernel and generating /etc/fstab…")
+        vmlinuz_src = Path("/run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux-surface")
+        if vmlinuz_src.is_file():
+            shutil.copy2(vmlinuz_src, target / "boot" / "vmlinuz-linux-surface")
+        fstab_res = subprocess.run(["genfstab", "-U", str(target)], capture_output=True, text=True, check=True)
+        (target / "etc" / "fstab").write_text(fstab_res.stdout, encoding="utf-8")
+
+        log("[6/8] Configuring NVMe mkinitcpio hooks & user account…")
+        archiso_dropin = target / "etc" / "mkinitcpio.conf.d" / "archiso.conf"
+        if archiso_dropin.exists():
+            archiso_dropin.unlink()
+        (target / "etc" / "mkinitcpio.conf").write_text(INSTALLED_MKINITCPIO_CONF, encoding="utf-8")
+        (target / "etc" / "hostname").write_text(f"{hostname}\n", encoding="utf-8")
+
+        # Create target user inside chroot
+        subprocess.run(
+            [
+                "arch-chroot",
+                str(target),
+                "/bin/bash",
+                "-c",
+                f"id -u {username} >/dev/null 2>&1 || useradd -m -c '{full_name}' -G wheel,video,audio,input,uucp,storage,network,power -s /bin/bash {username}; "
+                f"cp -rn /etc/skel/. /home/{username}/ 2>/dev/null || true; "
+                f"chown -R {username}:{username} /home/{username}; "
+                f"userdel -r live 2>/dev/null || true; "
+                f"rm -f /etc/sudoers.d/99-live",
+            ],
+            check=True,
+        )
+        chpasswd_input = f"{username}:{password}\nroot:{password}\n"
+        subprocess.run(
+            ["arch-chroot", str(target), "chpasswd"],
+            input=chpasswd_input,
+            text=True,
+            check=True,
+        )
+
+        log("[7/8] Building NVMe initramfs & running post-install configuration…")
+        subprocess.run(["arch-chroot", str(target), "/usr/bin/goldengate-post-install"], check=True)
+        if autologin:
+            autologin_dir = target / "etc" / "sddm.conf.d"
+            autologin_dir.mkdir(parents=True, exist_ok=True)
+            (autologin_dir / "20-autologin.conf").write_text(
+                f"[Autologin]\nUser={username}\nSession=goldengate.desktop\n",
+                encoding="utf-8",
+            )
+        subprocess.run(["arch-chroot", str(target), "mkinitcpio", "-P"], check=True)
+
+        log("[8/8] Installing UEFI GRUB bootloader for Surface Laptop 5…")
+        subprocess.run(
+            [
+                "arch-chroot",
+                str(target),
+                "grub-install",
+                "--target=x86_64-efi",
+                "--efi-directory=/boot/efi",
+                "--bootloader-id=GoldenGate",
+                "--recheck",
+            ],
+            check=True,
+        )
+        # Also copy to fallback EFI/BOOT/BOOTX64.EFI so Surface UEFI always boots it
+        subprocess.run(
+            [
+                "arch-chroot",
+                str(target),
+                "grub-install",
+                "--target=x86_64-efi",
+                "--efi-directory=/boot/efi",
+                "--removable",
+                "--recheck",
+            ],
+            check=False,
+        )
+        subprocess.run(["arch-chroot", str(target), "grub-mkconfig", "-o", "/boot/grub/grub.cfg"], check=True)
+        subprocess.run(["sync"], check=False)
+        subprocess.run(["umount", "-R", str(target)], check=False)
+        log("✅ GoldenGate OS installation complete! Remove the USB stick and click Restart.")
+        return True
+    except Exception as exc:
+        log(f"❌ Installation error: {exc}")
+        return False
+
+
+def run_gui() -> int:
+    try:
+        from PyQt6.QtCore import Qt, QThread, pyqtSignal
+        from PyQt6.QtGui import QFont
+        from PyQt6.QtWidgets import (
+            QApplication,
+            QCheckBox,
+            QComboBox,
+            QHBoxLayout,
+            QLabel,
+            QLineEdit,
+            QMessageBox,
+            QPlainTextEdit,
+            QPushButton,
+            QVBoxLayout,
+            QWidget,
+        )
+    except ImportError:
+        print(json.dumps({"disks": list_installable_disks()}, indent=2))
+        return 0
+
+    disks = list_installable_disks()
+    app = QApplication(sys.argv)
+    win = QWidget()
+    win.setWindowTitle("Install GoldenGate OS 27.0 — Surface Laptop 5")
+    win.setFixedSize(680, 520)
+    win.setStyleSheet("""
+        QWidget {
+            background-color: rgba(20, 22, 32, 245);
+            color: #F4F6FA;
+            font-family: 'Inter', sans-serif;
+            border-radius: 10px;
+        }
+        QLineEdit, QComboBox, QPlainTextEdit {
+            background-color: rgba(255, 255, 255, 18);
+            border: 1px solid rgba(255, 255, 255, 40);
+            border-radius: 8px;
+            padding: 7px 12px;
+            color: #FFFFFF;
+        }
+        QPushButton {
+            background-color: #0A84FF;
+            color: white;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        QPushButton#secondary {
+            background-color: rgba(255, 255, 255, 24);
+            border: 1px solid rgba(255, 255, 255, 45);
+        }
+    """)
+
+    layout = QVBoxLayout(win)
+    layout.setContentsMargins(26, 22, 26, 22)
+    layout.setSpacing(10)
+
+    title = QLabel("💿 Install macOS 27 Golden Gate to Surface SSD")
+    title.setFont(QFont("Inter", 16, QFont.Weight.Bold))
+    layout.addWidget(title)
+
+    layout.addWidget(QLabel("1. Target Internal Disk (ext4 Erase & Install):"))
+    disk_combo = QComboBox()
+    for d in disks:
+        disk_combo.addItem(f"{d['device']} — {d['model']} ({d['size_gb']} GB)", d["device"])
+    layout.addWidget(disk_combo)
+
+    row_user = QHBoxLayout()
+    fullname_edit = QLineEdit()
+    fullname_edit.setPlaceholderText("Full Name (e.g. Sarah)")
+    username_edit = QLineEdit()
+    username_edit.setPlaceholderText("Username (e.g. sarah)")
+    row_user.addWidget(fullname_edit)
+    row_user.addWidget(username_edit)
+    layout.addLayout(row_user)
+
+    row_pass = QHBoxLayout()
+    pass_edit = QLineEdit()
+    pass_edit.setEchoMode(QLineEdit.EchoMode.Password)
+    pass_edit.setPlaceholderText("Password (min 4 chars)")
+    hostname_edit = QLineEdit("Surface-GoldenGate")
+    hostname_edit.setPlaceholderText("Computer Name")
+    row_pass.addWidget(pass_edit)
+    row_pass.addWidget(hostname_edit)
+    layout.addLayout(row_pass)
+
+    autologin_cb = QCheckBox("Log in automatically on startup (Face ID still protects lock screen & sudo)")
+    autologin_cb.setChecked(True)
+    layout.addWidget(autologin_cb)
+
+    log_box = QPlainTextEdit()
+    log_box.setReadOnly(True)
+    log_box.setPlaceholderText("Ready to install GoldenGate OS 27.0 onto your Surface Laptop 5.")
+    layout.addWidget(log_box, stretch=1)
+
+    class InstallWorker(QThread):
+        progress = pyqtSignal(str)
+        finished_ok = pyqtSignal(bool)
+
+        def __init__(self, d_dev: str, u_name: str, f_name: str, pw: str, h_name: str, auto: bool) -> None:
+            super().__init__()
+            self.d_dev = d_dev
+            self.u_name = u_name
+            self.f_name = f_name
+            self.pw = pw
+            self.h_name = h_name
+            self.auto = auto
+
+        def run(self) -> None:
+            ok = execute_install(
+                self.d_dev,
+                self.u_name,
+                self.f_name,
+                self.pw,
+                self.h_name,
+                self.auto,
+                log_cb=self.progress.emit,
+            )
+            self.finished_ok.emit(ok)
+
+    btn_row = QHBoxLayout()
+    reboot_btn = QPushButton("Restart Surface Now")
+    reboot_btn.setObjectName("secondary")
+    reboot_btn.setVisible(False)
+    reboot_btn.clicked.connect(lambda: subprocess.Popen(["systemctl", "reboot"]))
+
+    install_btn = QPushButton("Erase Disk & Install GoldenGate OS…")
+
+    def on_start_install() -> None:
+        if os.geteuid() != 0:
+            subprocess.Popen(["sudo", "-E", sys.executable, __file__])
+            win.close()
+            return
+        d_dev = disk_combo.currentData() or "/dev/nvme0n1"
+        u_name = re.sub(r"[^a-z0-9_-]", "", (username_edit.text() or "user").strip().lower()) or "user"
+        f_name = (fullname_edit.text() or u_name.capitalize()).strip()
+        pw = pass_edit.text() or "goldengate"
+        h_name = (hostname_edit.text() or "Surface-GoldenGate").strip()
+
+        reply = QMessageBox.question(
+            win,
+            "Confirm Erase & Install",
+            f"All data on {d_dev} will be erased and replaced with GoldenGate OS (ext4).\n\nContinue?",
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        install_btn.setEnabled(False)
+        worker = InstallWorker(d_dev, u_name, f_name, pw, h_name, autologin_cb.isChecked())
+        win._worker = worker  # keep reference
+        worker.progress.connect(log_box.appendPlainText)
+        worker.finished_ok.connect(lambda ok: reboot_btn.setVisible(ok))
+        worker.start()
+
+    install_btn.clicked.connect(on_start_install)
+    btn_row.addStretch()
+    btn_row.addWidget(reboot_btn)
+    btn_row.addWidget(install_btn)
+    layout.addLayout(btn_row)
+
+    win.show()
+    return app.exec()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="GoldenGate OS Disk Installer")
+    parser.add_argument("--list-disks", action="store_true", help="Print installable internal disks as JSON")
+    parser.add_argument("--dry-run", type=str, metavar="DISK", help="Print installation plan for DISK as JSON")
+    parser.add_argument("--user", type=str, default="sarah", help="Username for --dry-run")
+    args = parser.parse_args(argv)
+
+    if args.list_disks:
+        print(json.dumps(list_installable_disks(), indent=2))
+        return 0
+    if args.dry_run:
+        print(json.dumps(build_install_plan(args.dry_run, args.user, args.user.capitalize()), indent=2))
+        return 0
+    return run_gui()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

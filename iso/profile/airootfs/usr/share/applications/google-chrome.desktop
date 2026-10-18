@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Safari / Chrome
+Comment=macOS 27 Golden Gate Unified Web Browser
+Exec=/bin/sh -c 'google-chrome-stable %U || chromium %U'
+Icon=web-browser
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;

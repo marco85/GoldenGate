@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Face ID & Passcode
+Comment=Configure Surface Laptop 5 IR Camera Face ID & Unlock Animation
+Exec=/usr/bin/goldengate-faceid-setup --gui
+Icon=preferences-desktop-user-password
+Terminal=false
+Type=Application
+Categories=Settings;System;Security;

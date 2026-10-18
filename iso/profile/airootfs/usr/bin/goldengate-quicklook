@@ -1,15 +1,35 @@
 #!/usr/bin/env python3
 """
-GoldenGate OS — macOS Finder "Quick Look" (Spacebar Preview)
+GoldenGate OS — macOS Finder "Quick Look" (Spacebar Preview + Live Text OCR)
 Renders an instant Liquid Glass preview window for images, text/markdown/code, PDFs, or directories.
+Includes 1-click Live Text OCR ("Copy Text from Image") and "Share via AirDrop".
 Press Spacebar or Escape to dismiss immediately.
 """
 from __future__ import annotations
 import argparse
+import json
 import mimetypes
 import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
+
+
+def extract_ocr_text(image_path: str) -> str:
+    if not shutil.which("tesseract"):
+        return ""
+    try:
+        res = subprocess.run(
+            ["tesseract", image_path, "stdout", "--oem", "1", "-l", "eng"],
+            capture_output=True,
+            text=True,
+            timeout=8,
+            check=False,
+        )
+        return res.stdout.strip()
+    except Exception:
+        return ""
 
 
 def inspect_target(path_str: str) -> dict:
@@ -72,7 +92,7 @@ def show_quicklook(info: dict) -> int:
     app = QApplication(sys.argv)
     win = QWidget()
     win.setWindowTitle(f"Quick Look — {info.get('name', '')}")
-    win.resize(760, 560)
+    win.resize(780, 580)
     win.setStyleSheet("""
         QWidget {
             background-color: rgba(26, 28, 36, 236);
@@ -96,6 +116,10 @@ def show_quicklook(info: dict) -> int:
             padding: 6px 14px;
             font-weight: 600;
         }
+        QPushButton#secondary {
+            background-color: rgba(255, 255, 255, 24);
+            border: 1px solid rgba(255, 255, 255, 45);
+        }
     """)
 
     layout = QVBoxLayout(win)
@@ -107,6 +131,25 @@ def show_quicklook(info: dict) -> int:
     title.setFont(QFont("Inter", 14, QFont.Weight.Bold))
     header.addWidget(title)
     header.addStretch()
+
+    kind = info.get("kind")
+    if kind == "image":
+        ocr_btn = QPushButton("🔍 Copy Text from Image (Live Text)")
+        ocr_btn.setObjectName("secondary")
+
+        def on_ocr() -> None:
+            txt = extract_ocr_text(info["path"])
+            if txt:
+                app.clipboard().setText(txt)
+                if shutil.which("wl-copy"):
+                    subprocess.run(["wl-copy"], input=txt, text=True, check=False)
+                ocr_btn.setText("✓ Copied Text to Clipboard")
+            else:
+                ocr_btn.setText("No Text Detected")
+
+        ocr_btn.clicked.connect(on_ocr)
+        header.addWidget(ocr_btn)
+
     airdrop_btn = QPushButton("Share via AirDrop…")
     airdrop_btn.clicked.connect(
         lambda: os.spawnlp(os.P_NOWAIT, "/usr/bin/goldengate-airdrop", "goldengate-airdrop", "--send", info["path"])
@@ -114,13 +157,12 @@ def show_quicklook(info: dict) -> int:
     header.addWidget(airdrop_btn)
     layout.addLayout(header)
 
-    kind = info.get("kind")
     if kind == "image":
         lbl = QLabel()
         lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         pix = QPixmap(info["path"])
         if not pix.isNull():
-            lbl.setPixmap(pix.scaled(700, 460, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            lbl.setPixmap(pix.scaled(720, 480, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         layout.addWidget(lbl, stretch=1)
     elif kind == "text":
         editor = QPlainTextEdit()
@@ -150,11 +192,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="GoldenGate OS Finder Quick Look")
     parser.add_argument("target", nargs="?", default=".", help="File or directory to preview")
     parser.add_argument("--json", action="store_true", help="Print file inspection JSON")
+    parser.add_argument("--ocr", action="store_true", help="Extract OCR text from image")
     args = parser.parse_args(argv)
 
     info = inspect_target(args.target)
+    if args.ocr:
+        print(extract_ocr_text(info["path"]))
+        return 0
     if args.json:
-        import json
         print(json.dumps(info, indent=2))
         return 0
     return show_quicklook(info)
