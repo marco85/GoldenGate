@@ -25,8 +25,8 @@ BorderSizeAuto=false
 ButtonsOnLeft=XIA
 ButtonsOnRight=
 ShowToolTips=false
-library=org.kde.kwin.aurorae
-theme=__aurorae__svg__WhiteSur-dark
+library=org.kde.breeze
+theme=Breeze
 
 [Plugins]
 blurEnabled=true

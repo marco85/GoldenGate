@@ -325,7 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.steps_json:
         print(json.dumps(get_setup_steps_summary(), indent=2))
         return 0
-    if args.autostart and DONE_MARKER.exists():
+    if args.autostart and (DONE_MARKER.exists() or os.environ.get("USER") == "live"):
         return 0
     return run_gui()
 

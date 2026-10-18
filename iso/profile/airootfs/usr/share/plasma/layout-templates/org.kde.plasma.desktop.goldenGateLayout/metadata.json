@@ -15,5 +15,6 @@
     "X-Plasma-Shell": "plasmashell",
     "X-Plasma-ContainmentCategories": [
         "panel"
-    ]
+    ],
+    "KPackageStructure": "Plasma/LayoutTemplate"
 }
