@@ -1,0 +1,57 @@
+--- a/package/contents/ui/main.qml
++++ b/package/contents/ui/main.qml
+@@ -866,10 +866,10 @@
+                 readonly property real _baseSize: Plasmoid.configuration.iconSize
+                 readonly property real _sigma: _baseSize * Plasmoid.configuration.amplitud
+ 
+-                property Item pearFinderItem: pearFinder
++                property Item pearFinderItem: null
+                 property Item pearLauncherItem: pearLauncher
+                 property Item pearSeparatorItem: dockSeparator
+-                property Item pearFolderArcItem: pearFolderArc
++                property Item pearFolderArcItem: null
+                 property Item pearTrashItem: pearTrash
+ 
+                 readonly property int dockLauncherCount: (pearFinderItem ? 1 : 0) + (pearLauncherItem ? 1 : 0)
+@@ -1050,18 +1050,13 @@
+                     }
+                 }
+ 
+-                DockIntegrations.PearFinder {
+-                    id: pearFinder
+-                    tasksRoot: tasks
+-                    dockRef: taskList
+-                    dockIndex: 0
+-                }
++
+ 
+                 DockIntegrations.PearLauncher {
+                     id: pearLauncher
+                     tasksRoot: tasks
+                     dockRef: taskList
+-                    dockIndex: 1
++                    dockIndex: 0
+                 }
+ 
+                 Repeater {
+@@ -1165,18 +1160,13 @@
+                     }
+                 }
+ 
+-                DockIntegrations.PearFolderArc {
+-                    id: pearFolderArc
+-                    tasksRoot: tasks
+-                    dockRef: taskList
+-                    dockIndex: taskList.dockLauncherCount + taskRepeater.count
+-                }
++
+ 
+                 DockIntegrations.PearTrash {
+                     id: pearTrash
+                     tasksRoot: tasks
+                     dockRef: taskList
+-                    dockIndex: taskList.dockLauncherCount + taskRepeater.count + 1
++                    dockIndex: taskList.dockLauncherCount + taskRepeater.count
+                 }
+             }
+         }

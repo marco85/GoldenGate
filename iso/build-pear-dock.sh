@@ -14,6 +14,8 @@ printf '%s  %s\n' "$SHA" "$STAGE/source.tar.gz" | sha256sum --check
 install -Dm644 "$STAGE/source.tar.gz" "$PROFILE/airootfs/usr/share/goldengate/sources/pearos-pkgbuilds-$REV.tar.gz"
 tar -xzf "$STAGE/source.tar.gz" -C "$STAGE"
 SOURCE="$STAGE/pkgbuilds-$REV/pearos-dock"
+patch -d "$SOURCE" -p1 < "$(dirname "$0")/patches/pear-dock-standard-apps.patch"
+install -Dm644 "$(dirname "$0")/patches/pear-dock-standard-apps.patch" "$PROFILE/airootfs/usr/share/goldengate/sources/pear-dock-standard-apps.patch"
 cmake -S "$SOURCE" -B "$STAGE/build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
 cmake --build "$STAGE/build" --parallel 2
 DESTDIR="$PROFILE/airootfs" cmake --install "$STAGE/build"

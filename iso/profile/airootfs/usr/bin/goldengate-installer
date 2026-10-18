@@ -226,7 +226,7 @@ def execute_install(
             ["chown", "-R", f"{username}:{username}", f"/home/{username}"],
         ):
             subprocess.run(["arch-chroot", str(target), *command], check=True)
-        subprocess.run(["arch-chroot", str(target), "userdel", "-r", "live"], check=True)
+        subprocess.run(["arch-chroot", str(target), "userdel", "-f", "-r", "live"], check=True)
         subprocess.run(["arch-chroot", str(target), "passwd", "-l", "root"], check=True)
         chpasswd_input = f"{username}:{password}\n"
         subprocess.run(

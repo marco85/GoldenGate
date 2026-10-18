@@ -50,11 +50,14 @@ dock.alignment = "center";
 dock.lengthMode = 1; // 1 = Fit Content in Plasma 6
 dock.hiding = "windowsgobelow";
 
+var usePearDock = typeof knownWidgetTypes !== "undefined" && knownWidgetTypes.indexOf("PearDock") !== -1;
+
+if (!usePearDock) {
 var launchpad = dock.addWidget("org.kde.plasma.kickerdash");
 launchpad.currentConfigGroup = ["General"];
 launchpad.writeConfig("icon", "applications-all");
+}
 
-var usePearDock = typeof knownWidgetTypes !== "undefined" && knownWidgetTypes.indexOf("PearDock") !== -1;
 var tasks = dock.addWidget(usePearDock ? "PearDock" : "org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", [
@@ -70,7 +73,7 @@ tasks.writeConfig("showOnlyCurrentDesktop", false);
 tasks.writeConfig("groupingStrategy", 1);
 tasks.writeConfig("iconSpacing", 1);
 
-dock.addWidget("org.kde.plasma.trash");
+if (!usePearDock) dock.addWidget("org.kde.plasma.trash");
 
 if (usePearDock) {
     tasks.writeConfig("skinName", "Tahoe Dark");
