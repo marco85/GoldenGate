@@ -42,17 +42,22 @@ if [ "${1:-}" = "--download" ] || [ -z "$LATEST_ISO" ]; then
     echo "Checking GitHub Releases for v27.0-latest ISO..."
     if gh release view v27.0-latest >/dev/null 2>&1; then
         echo "Downloading GoldenGate OS ISO from GitHub Release v27.0-latest into out/..."
-        rm -f out/*.part-* out/*.sha256
-        gh release download v27.0-latest -D out/ --clobber
-        SHA_FILE=$(ls -t out/*.iso.sha256 2>/dev/null | head -n 1 || true)
-        if [ -n "$SHA_FILE" ]; then
-            ISO_NAME=$(basename "$SHA_FILE" .sha256)
-            echo "Reassembling $ISO_NAME and verifying SHA-256 checksum..."
-            cat out/"${ISO_NAME}".part-* > "out/$ISO_NAME"
-            (cd out && shasum -a 256 -c "$(basename "$SHA_FILE")")
-            rm -f out/"${ISO_NAME}".part-*
+        download_dir=$(mktemp -d "$top/out/.download.XXXXXX")
+        trap 'rm -rf "$download_dir"' EXIT
+        gh release download v27.0-latest -D "$download_dir" --clobber
+        set -- "$download_dir"/*.iso.sha256
+        if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+            echo "Error: Release must contain exactly one ISO checksum; nothing will be written." >&2
+            exit 2
         fi
-        LATEST_ISO=$(ls -t out/*.iso 2>/dev/null | head -n 1 || true)
+        SHA_FILE=$1
+        ISO_NAME=$(basename "$SHA_FILE" .sha256)
+        echo "Reassembling $ISO_NAME and verifying SHA-256 checksum..."
+        cat "$download_dir/${ISO_NAME}".part-* > "$download_dir/$ISO_NAME"
+        (cd "$download_dir" && shasum -a 256 -c "$(basename "$SHA_FILE")")
+        mv "$download_dir/$ISO_NAME" "out/$ISO_NAME"
+        mv "$SHA_FILE" "out/${ISO_NAME}.sha256"
+        LATEST_ISO="out/$ISO_NAME"
     else
         STATUS=$(gh run list --workflow=build.yml --limit 1 --json status,conclusion,databaseId --jq '.[0] | "\(.status) (\(.conclusion // "running")) [ID: \(.databaseId)]"' || true)
         echo "Build is not finished yet. Latest run status: ${STATUS:-unknown}"
